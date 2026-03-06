@@ -4,21 +4,27 @@ import type { LookupResult } from '../hooks/useBarcodeLookup';
 
 type Category = { id: string; name: string };
 
+export type ProductFormData = {
+  name: string;
+  sku: string;
+  barcode: string;
+  price: number;
+  quantity: number;
+  category_id: string | null;
+  image_url: string | null;
+  is_published: boolean;
+  best_before_date: string | null;
+  expiry_warning_days: number;
+};
+
 type Props = {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (product: {
-    name: string;
-    sku: string;
-    barcode: string;
-    price: number;
-    quantity: number;
-    category_id: string | null;
-    image_url: string | null;
-    is_published: boolean;
-  }) => Promise<void>;
+  onSave: (product: ProductFormData) => Promise<void>;
   categories: Category[];
   prefilled?: LookupResult & { barcode: string };
+  productId?: string;
+  initialData?: Partial<ProductFormData> & { id: string };
 };
 
 export function AddProductModal({
@@ -27,6 +33,8 @@ export function AddProductModal({
   onSave,
   categories,
   prefilled,
+  productId,
+  initialData,
 }: Props) {
   const [name, setName] = useState('');
   const [sku, setSku] = useState('');
@@ -36,27 +44,50 @@ export function AddProductModal({
   const [categoryId, setCategoryId] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [isPublished, setIsPublished] = useState(false);
+  const [bestBeforeDate, setBestBeforeDate] = useState('');
+  const [expiryWarningDays, setExpiryWarningDays] = useState('7');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
+  const isEdit = !!productId;
+
   useEffect(() => {
-    if (prefilled) {
+    if (initialData) {
+      setName(initialData.name ?? '');
+      setSku(initialData.sku ?? '');
+      setBarcode(initialData.barcode ?? '');
+      setPrice(String(initialData.price ?? ''));
+      setQuantity(String(initialData.quantity ?? '1'));
+      setCategoryId(initialData.category_id ?? '');
+      setImageUrl(initialData.image_url ?? '');
+      setIsPublished(initialData.is_published ?? false);
+      setBestBeforeDate(initialData.best_before_date ?? '');
+      setExpiryWarningDays(String(initialData.expiry_warning_days ?? 7));
+    } else if (prefilled) {
       setName(prefilled.name);
       setBarcode(prefilled.barcode);
       setSku(prefilled.barcode);
       if (prefilled.imageUrl) setImageUrl(prefilled.imageUrl);
+      setPrice('');
+      setQuantity('1');
+      setCategoryId('');
+      setIsPublished(false);
+      setBestBeforeDate('');
+      setExpiryWarningDays('7');
     } else {
       setName('');
       setSku('');
       setBarcode('');
+      setPrice('');
+      setQuantity('1');
+      setCategoryId('');
       setImageUrl('');
+      setIsPublished(false);
+      setBestBeforeDate('');
+      setExpiryWarningDays('7');
     }
-    setPrice('');
-    setQuantity('1');
-    setCategoryId('');
-    setIsPublished(false);
     setError('');
-  }, [prefilled, isOpen]);
+  }, [prefilled, initialData, isOpen]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -75,6 +106,11 @@ export function AddProductModal({
       setError('Enter a valid quantity');
       return;
     }
+    const warningDays = parseInt(expiryWarningDays, 10);
+    if (isNaN(warningDays) || warningDays < 1 || warningDays > 90) {
+      setError('Warning days must be between 1 and 90');
+      return;
+    }
 
     setSaving(true);
     try {
@@ -87,6 +123,8 @@ export function AddProductModal({
         category_id: categoryId || null,
         image_url: imageUrl.trim() || null,
         is_published: isPublished,
+        best_before_date: bestBeforeDate.trim() || null,
+        expiry_warning_days: warningDays,
       });
       onClose();
     } catch (err) {
@@ -103,11 +141,11 @@ export function AddProductModal({
       <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl bg-white shadow-xl">
         <div className="sticky top-0 flex items-center justify-between border-b border-slate-200 bg-white px-6 py-4">
           <h2 className="text-lg font-semibold text-slate-900">
-            {prefilled ? 'Add product from scan' : 'Add product'}
+            {isEdit ? 'Edit product' : prefilled ? 'Add product from scan' : 'Add product'}
           </h2>
           <button
             onClick={onClose}
-            className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+            className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-700 min-h-[44px] min-w-[44px] flex items-center justify-center"
             aria-label="Close"
           >
             <X className="w-5 h-5" />
@@ -127,7 +165,7 @@ export function AddProductModal({
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-slate-300 px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+              className="mt-1 w-full rounded-lg border border-slate-300 px-4 py-2.5 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
               placeholder="e.g. Organic Milk 2%"
               required
             />
@@ -140,7 +178,7 @@ export function AddProductModal({
                 type="text"
                 value={barcode}
                 onChange={(e) => setBarcode(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-slate-300 px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                className="mt-1 w-full rounded-lg border border-slate-300 px-4 py-2.5 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
                 placeholder="From scan"
               />
             </div>
@@ -150,7 +188,7 @@ export function AddProductModal({
                 type="text"
                 value={sku}
                 onChange={(e) => setSku(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-slate-300 px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                className="mt-1 w-full rounded-lg border border-slate-300 px-4 py-2.5 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
                 placeholder="Optional"
               />
             </div>
@@ -165,7 +203,7 @@ export function AddProductModal({
                 min="0"
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-slate-300 px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                className="mt-1 w-full rounded-lg border border-slate-300 px-4 py-2.5 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
                 placeholder="0.00"
                 required
               />
@@ -177,8 +215,32 @@ export function AddProductModal({
                 min="0"
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-slate-300 px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                className="mt-1 w-full rounded-lg border border-slate-300 px-4 py-2.5 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
                 required
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700">Best before date</label>
+              <input
+                type="date"
+                value={bestBeforeDate}
+                onChange={(e) => setBestBeforeDate(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-slate-300 px-4 py-2.5 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700">Warn X days before expiry</label>
+              <input
+                type="number"
+                min="1"
+                max="90"
+                value={expiryWarningDays}
+                onChange={(e) => setExpiryWarningDays(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-slate-300 px-4 py-2.5 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                placeholder="7"
               />
             </div>
           </div>
@@ -188,7 +250,7 @@ export function AddProductModal({
             <select
               value={categoryId}
               onChange={(e) => setCategoryId(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-slate-300 px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+              className="mt-1 w-full rounded-lg border border-slate-300 px-4 py-2.5 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
             >
               <option value="">None</option>
               {categories.map((c) => (
@@ -205,7 +267,7 @@ export function AddProductModal({
               type="url"
               value={imageUrl}
               onChange={(e) => setImageUrl(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-slate-300 px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+              className="mt-1 w-full rounded-lg border border-slate-300 px-4 py-2.5 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
               placeholder="https://..."
             />
             {imageUrl && (
@@ -235,16 +297,16 @@ export function AddProductModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 rounded-lg border border-slate-300 px-4 py-2 text-slate-700 hover:bg-slate-50"
+              className="flex-1 rounded-lg border border-slate-300 px-4 py-2.5 text-slate-700 hover:bg-slate-50 min-h-[44px]"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="flex-1 rounded-lg bg-emerald-500 px-4 py-2 font-medium text-white hover:bg-emerald-600 disabled:opacity-50"
+              className="flex-1 rounded-lg bg-emerald-500 px-4 py-2.5 font-medium text-white hover:bg-emerald-600 disabled:opacity-50 min-h-[44px]"
             >
-              {saving ? 'Saving...' : 'Add product'}
+              {saving ? 'Saving...' : isEdit ? 'Save changes' : 'Add product'}
             </button>
           </div>
         </form>

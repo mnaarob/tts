@@ -17,6 +17,8 @@ import {
   ArrowUpCircle,
   FileText,
   Scan,
+  Menu,
+  X,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -36,6 +38,9 @@ type Product = {
   is_published: boolean;
   category_id: string | null;
   categories: { name: string } | null;
+  image_url?: string | null;
+  best_before_date?: string | null;
+  expiry_warning_days?: number | null;
 };
 
 type Category = {
@@ -83,6 +88,8 @@ export function InventoryDashboard() {
   const [scannerOpen, setScannerOpen] = useState(false);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [addModalPrefilled, setAddModalPrefilled] = useState<{ barcode: string; name: string; brand?: string; imageUrl?: string; categories?: string } | null>(null);
+  const [editProduct, setEditProduct] = useState<Product | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const fetchData = React.useCallback(async () => {
     if (!organization) return;
@@ -122,6 +129,7 @@ export function InventoryDashboard() {
       alert(`"${existing.name}" is already in your inventory.`);
       return;
     }
+    setEditProduct(null);
     setAddModalPrefilled({
       barcode,
       name: lookupData?.name || 'Unknown Product',
@@ -140,6 +148,8 @@ export function InventoryDashboard() {
     category_id: string | null;
     image_url: string | null;
     is_published: boolean;
+    best_before_date?: string | null;
+    expiry_warning_days?: number;
   }) {
     if (!organization) throw new Error('No organization. Please sign out and sign in again.');
     const { data: inserted, error } = await supabase
@@ -154,6 +164,8 @@ export function InventoryDashboard() {
         category_id: product.category_id || null,
         image_url: product.image_url || null,
         is_published: product.is_published,
+        best_before_date: product.best_before_date || null,
+        expiry_warning_days: product.expiry_warning_days ?? 7,
       })
       .select('id')
       .single();
@@ -176,16 +188,93 @@ export function InventoryDashboard() {
         quantity: product.quantity,
         note: 'Initial stock',
       });
-      // Ignore stock_movement errors; product is already saved
     }
     setAddModalPrefilled(null);
     fetchData();
+  }
+
+  async function handleUpdateProduct(
+    productId: string,
+    product: {
+      name: string;
+      sku: string;
+      barcode: string;
+      price: number;
+      quantity: number;
+      category_id: string | null;
+      image_url: string | null;
+      is_published: boolean;
+      best_before_date?: string | null;
+      expiry_warning_days?: number;
+    }
+  ) {
+    if (!organization) throw new Error('No organization. Please sign out and sign in again.');
+    const { error } = await supabase
+      .from('products')
+      .update({
+        name: product.name,
+        sku: product.sku || null,
+        barcode: product.barcode || null,
+        price: product.price,
+        quantity: product.quantity,
+        category_id: product.category_id || null,
+        image_url: product.image_url || null,
+        is_published: product.is_published,
+        best_before_date: product.best_before_date || null,
+        expiry_warning_days: product.expiry_warning_days ?? 7,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', productId)
+      .eq('organization_id', organization.id);
+
+    if (error) {
+      const msg =
+        error.code === '23503'
+          ? 'Invalid category. Please select a valid category or leave it empty.'
+          : error.code === '42501'
+            ? 'Permission denied. Make sure you are signed in and your organization is set up.'
+            : error.message;
+      throw new Error(msg);
+    }
+    setEditProduct(null);
+    fetchData();
+  }
+
+  function getExpiryStatus(product: Product): { label: string; className: string } | null {
+    const date = product.best_before_date;
+    if (!date) return null;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const bestBefore = new Date(date);
+    bestBefore.setHours(0, 0, 0, 0);
+    const daysLeft = Math.ceil((bestBefore.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    const warningDays = product.expiry_warning_days ?? 7;
+    if (daysLeft < 0) return { label: 'Expired', className: 'bg-red-100 text-red-800' };
+    if (daysLeft <= warningDays) return { label: `Expires in ${daysLeft} day${daysLeft === 1 ? '' : 's'}`, className: 'bg-amber-100 text-amber-800' };
+    return null;
   }
 
   const lowStockProducts = products.filter(
     (p) => p.quantity <= (p.low_stock_threshold ?? 5)
   );
   const lowStockCount = lowStockProducts.length;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const expiringSoonProducts = products.filter((p) => {
+    if (!p.best_before_date) return false;
+    const bestBefore = new Date(p.best_before_date);
+    bestBefore.setHours(0, 0, 0, 0);
+    const daysLeft = Math.ceil((bestBefore.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    const warningDays = p.expiry_warning_days ?? 7;
+    return daysLeft >= 0 && daysLeft <= warningDays;
+  });
+  const expiredProducts = products.filter((p) => {
+    if (!p.best_before_date) return false;
+    const bestBefore = new Date(p.best_before_date);
+    bestBefore.setHours(0, 0, 0, 0);
+    return bestBefore.getTime() < today.getTime();
+  });
   const inventoryValue = products.reduce((sum, p) => sum + Number(p.price) * p.quantity, 0);
   const categoriesWithCount = categories.map((cat) => ({
     ...cat,
@@ -207,30 +296,43 @@ export function InventoryDashboard() {
       <header className="bg-white border-b border-slate-200 sticky top-0 z-40">
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <Link to="/" className="flex items-center gap-2 group">
-              <div className="bg-blue-900 p-1.5 rounded-lg">
-                <Code2 className="w-6 h-6 text-white" />
-              </div>
-              <span className="font-bold text-xl text-slate-900">Tech to Store</span>
-            </Link>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="lg:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-100 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                aria-label="Toggle menu"
+              >
+                {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </button>
+              <Link to="/" className="flex items-center gap-2 group">
+                <div className="bg-blue-900 p-1.5 rounded-lg">
+                  <Code2 className="w-6 h-6 text-white" />
+                </div>
+                <span className="font-bold text-xl text-slate-900">Tech to Store</span>
+              </Link>
+            </div>
             <div className="flex items-center gap-4">
               <span className="text-sm text-slate-500 hidden sm:inline">
                 {organization.name}
               </span>
               <button
                 onClick={() => signOut()}
-                className="flex items-center gap-2 px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors text-sm">
+                className="flex items-center gap-2 px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors text-sm min-h-[44px] min-w-[44px] sm:min-w-0">
                 <LogOut className="w-4 h-4" />
-                Sign out
+                <span className="hidden sm:inline">Sign out</span>
               </button>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="flex">
-        {/* Sidebar */}
-        <aside className="w-64 min-h-[calc(100vh-4rem)] bg-white border-r border-slate-200 flex-shrink-0">
+      <div className="flex relative">
+        {/* Sidebar - collapsible on mobile */}
+        <aside
+          className={`fixed lg:static inset-y-0 left-0 z-30 w-64 min-h-[calc(100vh-4rem)] bg-white border-r border-slate-200 flex-shrink-0 transform transition-transform duration-200 ease-in-out ${
+            sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+          }`}
+        >
           <nav className="p-4 space-y-1">
             <p className="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">
               My Inventory
@@ -238,8 +340,11 @@ export function InventoryDashboard() {
             {SIDEBAR_LINKS.map((link) => (
               <button
                 key={link.name}
-                onClick={() => setActiveTab(link.name)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                onClick={() => {
+                  setActiveTab(link.name);
+                  setSidebarOpen(false);
+                }}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors min-h-[44px] ${
                   activeTab === link.name
                     ? 'bg-blue-50 text-blue-900'
                     : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
@@ -251,6 +356,13 @@ export function InventoryDashboard() {
             ))}
           </nav>
         </aside>
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/30 z-20 lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+            aria-hidden="true"
+          />
+        )}
 
         {/* Main Content */}
         <main className="flex-1 p-6 lg:p-8">
@@ -264,7 +376,7 @@ export function InventoryDashboard() {
               </div>
 
               {/* Stats Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                 <div className="bg-white rounded-xl border border-slate-200 p-6">
                   <p className="text-sm font-medium text-slate-500">Total Products</p>
                   <p className="text-2xl font-bold text-slate-900 mt-1">{products.length}</p>
@@ -273,9 +385,13 @@ export function InventoryDashboard() {
                   <p className="text-sm font-medium text-slate-500">Inventory Value</p>
                   <p className="text-2xl font-bold text-slate-900 mt-1">${inventoryValue.toFixed(2)}</p>
                 </div>
-                <div className="bg-white rounded-xl border border-amber-200 bg-amber-50 rounded-xl p-6">
+                <div className="bg-white rounded-xl border border-amber-200 bg-amber-50 p-6">
                   <p className="text-sm font-medium text-amber-700">Low Stock Alerts</p>
                   <p className="text-2xl font-bold text-amber-800 mt-1">{lowStockCount}</p>
+                </div>
+                <div className="bg-white rounded-xl border border-red-200 bg-red-50 p-6">
+                  <p className="text-sm font-medium text-red-700">Expiring Soon</p>
+                  <p className="text-2xl font-bold text-red-800 mt-1">{expiringSoonProducts.length + expiredProducts.length}</p>
                 </div>
               </div>
 
@@ -291,6 +407,32 @@ export function InventoryDashboard() {
                       {lowStockProducts.map((p) => p.name).join(', ')} {lowStockCount <= 2 ? 'is' : 'are'} below your reorder point.
                     </p>
                   </div>
+                </div>
+              )}
+
+              {/* Expiring Soon Alert */}
+              {(expiringSoonProducts.length > 0 || expiredProducts.length > 0) && (
+                <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-8">
+                  <p className="font-medium text-red-900 mb-2">
+                    {expiredProducts.length > 0 && (
+                      <span>{expiredProducts.length} product{expiredProducts.length > 1 ? 's' : ''} expired</span>
+                    )}
+                    {expiredProducts.length > 0 && expiringSoonProducts.length > 0 && ' · '}
+                    {expiringSoonProducts.length > 0 && (
+                      <span>{expiringSoonProducts.length} expiring soon</span>
+                    )}
+                  </p>
+                  <p className="text-sm text-red-700">
+                    {(expiredProducts.length > 0 ? expiredProducts : expiringSoonProducts)
+                      .map((p) => {
+                        const status = getExpiryStatus(p);
+                        const days = p.best_before_date
+                          ? Math.ceil((new Date(p.best_before_date).getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+                          : 0;
+                        return `${p.name}${status ? ` (${status.label})` : ''}`;
+                      })
+                      .join(', ')}
+                  </p>
                 </div>
               )}
 
@@ -310,17 +452,18 @@ export function InventoryDashboard() {
                     <div className="flex gap-2">
                       <button
                         onClick={() => setScannerOpen(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
+                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors min-h-[44px]"
                       >
                         <Scan className="w-4 h-4" />
                         Scan to add
                       </button>
                       <button
                         onClick={() => {
+                          setEditProduct(null);
                           setAddModalPrefilled(null);
                           setAddModalOpen(true);
                         }}
-                        className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-medium transition-colors"
+                        className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-medium transition-colors min-h-[44px]"
                       >
                         <Plus className="w-4 h-4" />
                         Add Product
@@ -328,87 +471,96 @@ export function InventoryDashboard() {
                     </div>
                   </div>
                 </div>
-                <div className="overflow-x-auto">
+                {/* Desktop table */}
+                <div className="hidden md:block overflow-x-auto">
                   <table className="w-full">
                     <thead>
                       <tr className="bg-slate-50 text-left">
-                        <th className="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                          Product
-                        </th>
-                        <th className="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                          SKU
-                        </th>
-                        <th className="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                          Category
-                        </th>
-                        <th className="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                          Price
-                        </th>
-                        <th className="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                          Qty
-                        </th>
-                        <th className="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                          Website
-                        </th>
-                        <th className="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                          Actions
-                        </th>
+                        <th className="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Product</th>
+                        <th className="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">SKU</th>
+                        <th className="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Category</th>
+                        <th className="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Price</th>
+                        <th className="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Qty</th>
+                        <th className="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Website</th>
+                        <th className="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200">
                       {(loading ? [] : products).map((product) => {
                         const isLowStock = product.quantity <= (product.low_stock_threshold ?? 5);
+                        const expiryStatus = getExpiryStatus(product);
                         return (
-                        <tr key={product.id} className="hover:bg-slate-50">
-                          <td className="px-6 py-4">
-                            <span className="font-medium text-slate-900">
-                              {product.name}
-                            </span>
-                            {isLowStock && (
-                              <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">
-                                Low stock
+                          <tr key={product.id} className="hover:bg-slate-50">
+                            <td className="px-6 py-4">
+                              <span className="font-medium text-slate-900">{product.name}</span>
+                              {isLowStock && (
+                                <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">Low stock</span>
+                              )}
+                              {expiryStatus && (
+                                <span className={`ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${expiryStatus.className}`}>{expiryStatus.label}</span>
+                              )}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-slate-600">{product.sku || '-'}</td>
+                            <td className="px-6 py-4 text-sm text-slate-600">{product.categories?.name || '-'}</td>
+                            <td className="px-6 py-4 text-sm font-medium text-slate-900">${Number(product.price).toFixed(2)}</td>
+                            <td className="px-6 py-4">
+                              <span className={`text-sm font-medium ${isLowStock ? 'text-amber-600' : 'text-slate-900'}`}>{product.quantity}</span>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${product.is_published ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'}`}>
+                                {product.is_published ? 'Published' : 'Draft'}
                               </span>
-                            )}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-slate-600">
-                            {product.sku || '-'}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-slate-600">
-                            {product.categories?.name || '-'}
-                          </td>
-                          <td className="px-6 py-4 text-sm font-medium text-slate-900">
-                            ${Number(product.price).toFixed(2)}
-                          </td>
-                          <td className="px-6 py-4">
-                            <span
-                              className={`text-sm font-medium ${
-                                isLowStock ? 'text-amber-600' : 'text-slate-900'
-                              }`}
-                            >
-                              {product.quantity}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <span
-                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                product.is_published
-                                  ? 'bg-emerald-100 text-emerald-800'
-                                  : 'bg-slate-100 text-slate-600'
-                              }`}
-                            >
-                              {product.is_published ? 'Published' : 'Draft'}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <button className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-1">
-                              Edit
-                              <ChevronRight className="w-4 h-4" />
-                            </button>
-                          </td>
-                        </tr>
-                      );})}
+                            </td>
+                            <td className="px-6 py-4">
+                              <button
+                                onClick={() => {
+                                  setEditProduct(product);
+                                  setAddModalPrefilled(null);
+                                  setAddModalOpen(true);
+                                }}
+                                className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-1 min-h-[44px]"
+                              >
+                                Edit <ChevronRight className="w-4 h-4" />
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
+                </div>
+                {/* Mobile cards */}
+                <div className="md:hidden divide-y divide-slate-200">
+                  {(loading ? [] : products).map((product) => {
+                    const isLowStock = product.quantity <= (product.low_stock_threshold ?? 5);
+                    const expiryStatus = getExpiryStatus(product);
+                    return (
+                      <div key={product.id} className="p-4 hover:bg-slate-50">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <span className="font-medium text-slate-900">{product.name}</span>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {isLowStock && <span className="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">Low stock</span>}
+                              {expiryStatus && <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${expiryStatus.className}`}>{expiryStatus.label}</span>}
+                            </div>
+                            <p className="text-sm text-slate-600 mt-1">
+                              {product.categories?.name || '-'} · ${Number(product.price).toFixed(2)} · Qty: {product.quantity}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => {
+                              setEditProduct(product);
+                              setAddModalPrefilled(null);
+                              setAddModalOpen(true);
+                            }}
+                            className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-1 min-h-[44px] min-w-[44px] justify-end"
+                          >
+                            Edit <ChevronRight className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </>
@@ -451,6 +603,7 @@ export function InventoryDashboard() {
                     </button>
                     <button
                       onClick={() => {
+                        setEditProduct(null);
                         setAddModalPrefilled(null);
                         setAddModalOpen(true);
                       }}
@@ -461,7 +614,8 @@ export function InventoryDashboard() {
                     </button>
                   </div>
                 </div>
-                <div className="overflow-x-auto">
+                {/* Desktop table */}
+                <div className="hidden md:block overflow-x-auto">
                   <table className="w-full">
                     <thead>
                       <tr className="bg-slate-50 text-left">
@@ -477,32 +631,79 @@ export function InventoryDashboard() {
                     <tbody className="divide-y divide-slate-200">
                       {products.map((product) => {
                         const isLowStock = product.quantity <= (product.low_stock_threshold ?? 5);
+                        const expiryStatus = getExpiryStatus(product);
                         return (
-                        <tr key={product.id} className="hover:bg-slate-50">
-                          <td className="px-6 py-4">
-                            <span className="font-medium text-slate-900">{product.name}</span>
-                            {isLowStock && (
-                              <span className="ml-2 inline-flex px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">Low stock</span>
-                            )}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-slate-600">{product.sku || '-'}</td>
-                          <td className="px-6 py-4 text-sm text-slate-600">{product.categories?.name || '-'}</td>
-                          <td className="px-6 py-4 text-sm font-medium text-slate-900">${Number(product.price).toFixed(2)}</td>
-                          <td className="px-6 py-4">
-                            <span className={`text-sm font-medium ${isLowStock ? 'text-amber-600' : 'text-slate-900'}`}>{product.quantity}</span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${product.is_published ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'}`}>
-                              {product.is_published ? 'Published' : 'Draft'}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <button className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-1">Edit <ChevronRight className="w-4 h-4" /></button>
-                          </td>
-                        </tr>
-                      );})}
+                          <tr key={product.id} className="hover:bg-slate-50">
+                            <td className="px-6 py-4">
+                              <span className="font-medium text-slate-900">{product.name}</span>
+                              {isLowStock && (
+                                <span className="ml-2 inline-flex px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">Low stock</span>
+                              )}
+                              {expiryStatus && (
+                                <span className={`ml-2 inline-flex px-2 py-0.5 rounded text-xs font-medium ${expiryStatus.className}`}>{expiryStatus.label}</span>
+                              )}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-slate-600">{product.sku || '-'}</td>
+                            <td className="px-6 py-4 text-sm text-slate-600">{product.categories?.name || '-'}</td>
+                            <td className="px-6 py-4 text-sm font-medium text-slate-900">${Number(product.price).toFixed(2)}</td>
+                            <td className="px-6 py-4">
+                              <span className={`text-sm font-medium ${isLowStock ? 'text-amber-600' : 'text-slate-900'}`}>{product.quantity}</span>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${product.is_published ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'}`}>
+                                {product.is_published ? 'Published' : 'Draft'}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4">
+                              <button
+                                onClick={() => {
+                                  setEditProduct(product);
+                                  setAddModalPrefilled(null);
+                                  setAddModalOpen(true);
+                                }}
+                                className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-1"
+                              >
+                                Edit <ChevronRight className="w-4 h-4" />
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
+                </div>
+                {/* Mobile cards */}
+                <div className="md:hidden divide-y divide-slate-200">
+                  {products.map((product) => {
+                    const isLowStock = product.quantity <= (product.low_stock_threshold ?? 5);
+                    const expiryStatus = getExpiryStatus(product);
+                    return (
+                      <div key={product.id} className="p-4 hover:bg-slate-50">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <span className="font-medium text-slate-900">{product.name}</span>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {isLowStock && <span className="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">Low stock</span>}
+                              {expiryStatus && <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${expiryStatus.className}`}>{expiryStatus.label}</span>}
+                            </div>
+                            <p className="text-sm text-slate-600 mt-1">
+                              {product.categories?.name || '-'} · ${Number(product.price).toFixed(2)} · Qty: {product.quantity}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => {
+                              setEditProduct(product);
+                              setAddModalPrefilled(null);
+                              setAddModalOpen(true);
+                            }}
+                            className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-1 min-h-[44px] min-w-[44px] justify-end"
+                          >
+                            Edit <ChevronRight className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </>
@@ -689,10 +890,33 @@ export function InventoryDashboard() {
         onClose={() => {
           setAddModalOpen(false);
           setAddModalPrefilled(null);
+          setEditProduct(null);
         }}
-        onSave={handleSaveProduct}
+        onSave={
+          editProduct
+            ? (data) => handleUpdateProduct(editProduct.id, data)
+            : handleSaveProduct
+        }
         categories={categories}
         prefilled={addModalPrefilled}
+        productId={editProduct?.id}
+        initialData={
+          editProduct
+            ? {
+                id: editProduct.id,
+                name: editProduct.name,
+                sku: editProduct.sku ?? '',
+                barcode: editProduct.barcode ?? '',
+                price: editProduct.price,
+                quantity: editProduct.quantity,
+                category_id: editProduct.category_id,
+                image_url: editProduct.image_url ?? '',
+                is_published: editProduct.is_published,
+                best_before_date: editProduct.best_before_date ?? '',
+                expiry_warning_days: editProduct.expiry_warning_days ?? 7,
+              }
+            : undefined
+        }
       />
     </div>
   );
