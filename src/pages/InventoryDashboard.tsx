@@ -141,19 +141,43 @@ export function InventoryDashboard() {
     image_url: string | null;
     is_published: boolean;
   }) {
-    if (!organization) return;
-    const { error } = await supabase.from('products').insert({
-      organization_id: organization.id,
-      name: product.name,
-      sku: product.sku || null,
-      barcode: product.barcode || null,
-      price: product.price,
-      quantity: product.quantity,
-      category_id: product.category_id,
-      image_url: product.image_url,
-      is_published: product.is_published,
-    });
-    if (error) throw error;
+    if (!organization) throw new Error('No organization. Please sign out and sign in again.');
+    const { data: inserted, error } = await supabase
+      .from('products')
+      .insert({
+        organization_id: organization.id,
+        name: product.name,
+        sku: product.sku || null,
+        barcode: product.barcode || null,
+        price: product.price,
+        quantity: product.quantity,
+        category_id: product.category_id || null,
+        image_url: product.image_url || null,
+        is_published: product.is_published,
+      })
+      .select('id')
+      .single();
+
+    if (error) {
+      const msg =
+        error.code === '23503'
+          ? 'Invalid category. Please select a valid category or leave it empty.'
+          : error.code === '42501'
+            ? 'Permission denied. Make sure you are signed in and your organization is set up.'
+            : error.message;
+      throw new Error(msg);
+    }
+
+    if (inserted && product.quantity > 0) {
+      await supabase.from('stock_movements').insert({
+        product_id: inserted.id,
+        organization_id: organization.id,
+        type: 'receive',
+        quantity: product.quantity,
+        note: 'Initial stock',
+      });
+      // Ignore stock_movement errors; product is already saved
+    }
     setAddModalPrefilled(null);
     fetchData();
   }

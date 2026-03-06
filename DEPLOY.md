@@ -88,11 +88,17 @@ Usually 5–30 minutes. Vercel will issue an SSL certificate automatically.
 
 ## GitHub Pages (if using the Deploy workflow)
 
-1. In your repo: **Settings** → **Secrets and variables** → **Actions**
-2. Add repository secrets:
+1. **Enable GitHub Pages from Actions:**
+   - Repo → **Settings** → **Pages**
+   - Under "Build and deployment", set **Source** to **"GitHub Actions"**
+   - (If it stays on "Deploy from a branch", the Actions deploy will not be used and you'll get 404)
+
+2. **Add repository secrets** (Settings → Secrets and variables → Actions):
    - `VITE_SUPABASE_URL` = `https://iyubmgzxypcanrbyuyck.supabase.co`
    - `VITE_SUPABASE_ANON_KEY` = your Supabase publishable key
+
 3. Push to `main` – the workflow will build and deploy
+
 4. Site will be at: `https://mnaarob.github.io/tts/`
 
 ---
