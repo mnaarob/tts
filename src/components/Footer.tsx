@@ -11,7 +11,7 @@ export function Footer() {
                 <Code2 className="w-6 h-6 text-white" />
               </div>
               <span className="font-bold text-xl text-white tracking-tight">
-                Store Warden
+                Tech to Store
               </span>
             </div>
             <p className="text-sm leading-relaxed text-slate-400">
@@ -60,7 +60,7 @@ export function Footer() {
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-white transition-colors">
+                <a href="#/inventory" className="hover:text-white transition-colors">
                   Inventory Management
                 </a>
               </li>
@@ -95,7 +95,7 @@ export function Footer() {
         </div>
 
         <div className="pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-slate-500">
-          <p>© 2025 Store Warden. Proudly Canadian. 🇨🇦</p>
+          <p>© 2025 Tech to Store. Proudly Canadian. 🇨🇦</p>
           <div className="flex gap-6">
             <a href="#" className="hover:text-white transition-colors">
               Twitter

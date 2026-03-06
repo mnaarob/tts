@@ -28,7 +28,7 @@ export function Hero() {
             </span>
             <h1 className="text-4xl md:text-6xl font-bold text-slate-900 tracking-tight mb-6 leading-tight">
               Empower Your Canadian Business with{' '}
-              <span className="text-blue-900">Store Warden</span>
+              <span className="text-blue-900">Tech to Store</span>
             </h1>
             <p className="text-lg md:text-xl text-slate-600 mb-10 max-w-2xl mx-auto leading-relaxed">
               Professional websites, powerful SEO, and future-ready inventory

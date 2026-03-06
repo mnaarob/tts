@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Code2, Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '../contexts/AuthContext';
+
 export function Header() {
+  const { user } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   useEffect(() => {
@@ -36,16 +40,16 @@ export function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center">
           {/* Logo */}
-          <a href="#" className="flex items-center gap-2 group">
+          <Link to="/" className="flex items-center gap-2 group">
             <div className="bg-blue-900 p-1.5 rounded-lg group-hover:bg-blue-800 transition-colors">
               <Code2 className="w-6 h-6 text-white" />
             </div>
             <span
               className={`font-bold text-xl tracking-tight ${isScrolled ? 'text-slate-900' : 'text-slate-900'}`}>
 
-              Store Warden
+              Tech to Store
             </span>
-          </a>
+          </Link>
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-8">
@@ -58,12 +62,26 @@ export function Header() {
                 {link.name}
               </a>
             )}
-            <a
-              href="#contact"
-              className="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-all hover:shadow-lg hover:-translate-y-0.5">
-
-              Schedule Demo
-            </a>
+            {user ? (
+              <Link
+                to="/inventory"
+                className="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-all hover:shadow-lg hover:-translate-y-0.5">
+                My Inventory
+              </Link>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="text-sm font-medium text-slate-600 hover:text-blue-900 transition-colors">
+                  Sign in
+                </Link>
+                <Link
+                  to="/signup"
+                  className="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-all hover:shadow-lg hover:-translate-y-0.5">
+                  Sign up
+                </Link>
+              </>
+            )}
           </nav>
 
           {/* Mobile Menu Button */}
@@ -110,13 +128,29 @@ export function Header() {
                   {link.name}
                 </a>
             )}
-              <a
-              href="#contact"
-              className="bg-emerald-500 text-white px-5 py-3 rounded-lg text-center font-semibold mt-4"
-              onClick={() => setIsMobileMenuOpen(false)}>
-
-                Schedule Demo
-              </a>
+              {user ? (
+                <Link
+                  to="/inventory"
+                  className="bg-emerald-500 text-white px-5 py-3 rounded-lg text-center font-semibold mt-4"
+                  onClick={() => setIsMobileMenuOpen(false)}>
+                  My Inventory
+                </Link>
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    className="text-base font-medium text-slate-600 py-2"
+                    onClick={() => setIsMobileMenuOpen(false)}>
+                    Sign in
+                  </Link>
+                  <Link
+                    to="/signup"
+                    className="bg-emerald-500 text-white px-5 py-3 rounded-lg text-center font-semibold"
+                    onClick={() => setIsMobileMenuOpen(false)}>
+                    Sign up
+                  </Link>
+                </>
+              )}
             </div>
           </motion.div>
         }
