@@ -292,42 +292,40 @@ export function InventoryDashboard() {
 
   return (
     <div className="min-h-screen bg-slate-100 lg:bg-slate-50">
-      {/* Top Header - compact on mobile */}
-      <header className="bg-white border-b border-slate-200/80 sticky top-0 z-40 shadow-sm safe-area-inset">
-        <div className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-          <div className="flex justify-between items-center h-14 sm:h-16">
-            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-              <button
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="lg:hidden p-2.5 -ml-2 rounded-xl text-slate-600 hover:bg-slate-100 active:bg-slate-200 min-h-[44px] min-w-[44px] flex items-center justify-center transition-colors"
-                aria-label="Toggle menu"
-              >
-                {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-              </button>
-              <Link to="/" className="flex items-center gap-2 group min-w-0">
-                <div className="bg-blue-900 p-1.5 rounded-lg flex-shrink-0">
-                  <Code2 className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                </div>
-                <span className="font-semibold text-lg sm:text-xl text-slate-900 truncate">Tech to Store</span>
-              </Link>
-            </div>
-            <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
-              <span className="text-xs sm:text-sm text-slate-500 hidden sm:inline truncate max-w-[120px]">
-                {organization.name}
-              </span>
-              <button
-                onClick={() => signOut()}
-                className="flex items-center gap-2 px-3 sm:px-4 py-2 text-slate-600 hover:bg-slate-100 active:bg-slate-200 rounded-xl transition-colors text-sm min-h-[44px] min-w-[44px] sm:min-w-0 justify-center"
-              >
-                <LogOut className="w-4 h-4" />
-                <span className="hidden sm:inline">Sign out</span>
-              </button>
-            </div>
+      {/* Top Header - Tech to Store left, org + Sign out right */}
+      <header className="bg-white border-b border-slate-200/80 sticky top-0 z-40 shadow-sm safe-area-top">
+        <div className="flex justify-between items-center h-14 sm:h-16 px-4 sm:px-6 lg:px-8 w-full">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="lg:hidden p-2.5 -ml-2 rounded-xl text-slate-600 hover:bg-slate-100 active:bg-slate-200 min-h-[44px] min-w-[44px] flex items-center justify-center transition-colors"
+              aria-label="Toggle menu"
+            >
+              {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+            <Link to="/" className="flex items-center gap-2 group min-w-0">
+              <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Code2 className="w-5 h-5 text-white" />
+              </div>
+              <span className="font-semibold text-slate-900 truncate">Tech to Store</span>
+            </Link>
+          </div>
+          <div className="flex items-center gap-3 sm:gap-4 flex-shrink-0">
+            <span className="text-sm text-slate-600 hidden sm:block truncate max-w-[160px]">
+              {organization.name}
+            </span>
+            <button
+              onClick={() => signOut()}
+              className="flex items-center gap-2 px-3 sm:px-4 py-2 text-slate-600 hover:bg-slate-100 active:bg-slate-200 rounded-xl transition-colors text-sm min-h-[44px] min-w-[44px] sm:min-w-0 justify-center"
+            >
+              <LogOut className="w-4 h-4" />
+              <span className="hidden sm:inline">Sign out</span>
+            </button>
           </div>
         </div>
       </header>
 
-      <div className="flex relative pb-20 lg:pb-0">
+      <div className="flex relative">
         {/* Sidebar - narrow drawer on mobile, full on desktop */}
         <aside
           className={`fixed lg:static inset-y-0 left-0 z-30 w-[min(280px,85vw)] lg:w-64 min-h-screen lg:min-h-[calc(100vh-4rem)] bg-white flex-shrink-0 transform transition-transform duration-300 ease-out lg:translate-x-0 ${
@@ -365,26 +363,6 @@ export function InventoryDashboard() {
             aria-hidden="true"
           />
         )}
-
-        {/* Mobile bottom nav */}
-        <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-slate-200/80 safe-area-inset-bottom shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
-          <div className="flex justify-around items-center h-16 px-2">
-            {SIDEBAR_LINKS.map((link) => (
-              <button
-                key={link.name}
-                onClick={() => setActiveTab(link.name)}
-                className={`flex flex-col items-center justify-center gap-1 min-w-[64px] min-h-[56px] rounded-xl transition-colors ${
-                  activeTab === link.name
-                    ? 'text-blue-600 bg-blue-50'
-                    : 'text-slate-500 hover:text-slate-700 active:bg-slate-50'
-                }`}
-              >
-                <link.icon className="w-5 h-5" />
-                <span className="text-[10px] font-medium">{link.name}</span>
-              </button>
-            ))}
-          </div>
-        </nav>
 
         {/* Main Content */}
         <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">

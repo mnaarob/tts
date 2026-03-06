@@ -10,7 +10,8 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-.safe-area-inset {
+.safe-area-inset,
+.safe-area-top {
   padding-top: env(safe-area-inset-top, 0);
 }
 .safe-area-inset-bottom {
