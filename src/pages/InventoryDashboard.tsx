@@ -291,33 +291,34 @@ export function InventoryDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Top Header */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-40">
-        <div className="px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-3">
+    <div className="min-h-screen bg-slate-100 lg:bg-slate-50">
+      {/* Top Header - compact on mobile */}
+      <header className="bg-white border-b border-slate-200/80 sticky top-0 z-40 shadow-sm safe-area-inset">
+        <div className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+          <div className="flex justify-between items-center h-14 sm:h-16">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="lg:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-100 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                className="lg:hidden p-2.5 -ml-2 rounded-xl text-slate-600 hover:bg-slate-100 active:bg-slate-200 min-h-[44px] min-w-[44px] flex items-center justify-center transition-colors"
                 aria-label="Toggle menu"
               >
                 {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </button>
-              <Link to="/" className="flex items-center gap-2 group">
-                <div className="bg-blue-900 p-1.5 rounded-lg">
-                  <Code2 className="w-6 h-6 text-white" />
+              <Link to="/" className="flex items-center gap-2 group min-w-0">
+                <div className="bg-blue-900 p-1.5 rounded-lg flex-shrink-0">
+                  <Code2 className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
-                <span className="font-bold text-xl text-slate-900">Tech to Store</span>
+                <span className="font-semibold text-lg sm:text-xl text-slate-900 truncate">Tech to Store</span>
               </Link>
             </div>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-slate-500 hidden sm:inline">
+            <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
+              <span className="text-xs sm:text-sm text-slate-500 hidden sm:inline truncate max-w-[120px]">
                 {organization.name}
               </span>
               <button
                 onClick={() => signOut()}
-                className="flex items-center gap-2 px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors text-sm min-h-[44px] min-w-[44px] sm:min-w-0">
+                className="flex items-center gap-2 px-3 sm:px-4 py-2 text-slate-600 hover:bg-slate-100 active:bg-slate-200 rounded-xl transition-colors text-sm min-h-[44px] min-w-[44px] sm:min-w-0 justify-center"
+              >
                 <LogOut className="w-4 h-4" />
                 <span className="hidden sm:inline">Sign out</span>
               </button>
@@ -326,15 +327,16 @@ export function InventoryDashboard() {
         </div>
       </header>
 
-      <div className="flex relative">
-        {/* Sidebar - collapsible on mobile */}
+      <div className="flex relative pb-20 lg:pb-0">
+        {/* Sidebar - narrow drawer on mobile, full on desktop */}
         <aside
-          className={`fixed lg:static inset-y-0 left-0 z-30 w-64 min-h-[calc(100vh-4rem)] bg-white border-r border-slate-200 flex-shrink-0 transform transition-transform duration-200 ease-in-out ${
-            sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+          className={`fixed lg:static inset-y-0 left-0 z-30 w-[min(280px,85vw)] lg:w-64 min-h-screen lg:min-h-[calc(100vh-4rem)] bg-white flex-shrink-0 transform transition-transform duration-300 ease-out lg:translate-x-0 ${
+            sidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0'
           }`}
         >
-          <nav className="p-4 space-y-1">
-            <p className="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+          <div className="h-14 lg:hidden" />
+          <nav className="p-4 pt-6 lg:pt-4 space-y-1">
+            <p className="px-3 py-2 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
               My Inventory
             </p>
             {SIDEBAR_LINKS.map((link) => (
@@ -344,13 +346,13 @@ export function InventoryDashboard() {
                   setActiveTab(link.name);
                   setSidebarOpen(false);
                 }}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors min-h-[44px] ${
+                className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all min-h-[48px] ${
                   activeTab === link.name
-                    ? 'bg-blue-50 text-blue-900'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                    ? 'bg-blue-50 text-blue-700 shadow-sm'
+                    : 'text-slate-600 hover:bg-slate-50 active:bg-slate-100 text-slate-900'
                 }`}
               >
-                <link.icon className="w-5 h-5" />
+                <link.icon className={`w-5 h-5 flex-shrink-0 ${activeTab === link.name ? 'text-blue-600' : ''}`} />
                 {link.name}
               </button>
             ))}
@@ -358,77 +360,96 @@ export function InventoryDashboard() {
         </aside>
         {sidebarOpen && (
           <div
-            className="fixed inset-0 bg-black/30 z-20 lg:hidden"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-20 lg:hidden"
             onClick={() => setSidebarOpen(false)}
             aria-hidden="true"
           />
         )}
 
+        {/* Mobile bottom nav */}
+        <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-slate-200/80 safe-area-inset-bottom shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
+          <div className="flex justify-around items-center h-16 px-2">
+            {SIDEBAR_LINKS.map((link) => (
+              <button
+                key={link.name}
+                onClick={() => setActiveTab(link.name)}
+                className={`flex flex-col items-center justify-center gap-1 min-w-[64px] min-h-[56px] rounded-xl transition-colors ${
+                  activeTab === link.name
+                    ? 'text-blue-600 bg-blue-50'
+                    : 'text-slate-500 hover:text-slate-700 active:bg-slate-50'
+                }`}
+              >
+                <link.icon className="w-5 h-5" />
+                <span className="text-[10px] font-medium">{link.name}</span>
+              </button>
+            ))}
+          </div>
+        </nav>
+
         {/* Main Content */}
-        <main className="flex-1 p-6 lg:p-8">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
           {activeTab === 'Dashboard' && (
             <>
-              <div className="mb-8">
-                <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
-                <p className="text-slate-600 mt-1">
+              <div className="mb-6 sm:mb-8">
+                <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Dashboard</h1>
+                <p className="text-slate-600 mt-0.5 text-sm sm:text-base">
                   Overview of your inventory
                 </p>
               </div>
 
-              {/* Stats Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                <div className="bg-white rounded-xl border border-slate-200 p-6">
-                  <p className="text-sm font-medium text-slate-500">Total Products</p>
-                  <p className="text-2xl font-bold text-slate-900 mt-1">{products.length}</p>
+              {/* Stats Cards - 2x2 on mobile, polished */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
+                <div className="bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-6 shadow-sm">
+                  <p className="text-xs sm:text-sm font-medium text-slate-500">Total Products</p>
+                  <p className="text-xl sm:text-2xl font-bold text-slate-900 mt-1">{products.length}</p>
                 </div>
-                <div className="bg-white rounded-xl border border-slate-200 p-6">
-                  <p className="text-sm font-medium text-slate-500">Inventory Value</p>
-                  <p className="text-2xl font-bold text-slate-900 mt-1">${inventoryValue.toFixed(2)}</p>
+                <div className="bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-6 shadow-sm">
+                  <p className="text-xs sm:text-sm font-medium text-slate-500">Inventory Value</p>
+                  <p className="text-xl sm:text-2xl font-bold text-slate-900 mt-1">${inventoryValue.toFixed(2)}</p>
                 </div>
-                <div className="bg-white rounded-xl border border-amber-200 bg-amber-50 p-6">
-                  <p className="text-sm font-medium text-amber-700">Low Stock Alerts</p>
-                  <p className="text-2xl font-bold text-amber-800 mt-1">{lowStockCount}</p>
+                <div className="bg-amber-50 rounded-2xl border border-amber-200/80 p-4 sm:p-6 shadow-sm">
+                  <p className="text-xs sm:text-sm font-medium text-amber-700">Low Stock</p>
+                  <p className="text-xl sm:text-2xl font-bold text-amber-800 mt-1">{lowStockCount}</p>
                 </div>
-                <div className="bg-white rounded-xl border border-red-200 bg-red-50 p-6">
-                  <p className="text-sm font-medium text-red-700">Expiring Soon</p>
-                  <p className="text-2xl font-bold text-red-800 mt-1">{expiringSoonProducts.length + expiredProducts.length}</p>
+                <div className="bg-red-50 rounded-2xl border border-red-200/80 p-4 sm:p-6 shadow-sm">
+                  <p className="text-xs sm:text-sm font-medium text-red-700">Expiring Soon</p>
+                  <p className="text-xl sm:text-2xl font-bold text-red-800 mt-1">{expiringSoonProducts.length + expiredProducts.length}</p>
                 </div>
               </div>
 
-              {/* Low Stock Alert */}
+              {/* Low Stock Alert - polished */}
               {lowStockCount > 0 && (
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-8 flex items-start gap-3">
-                  <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="font-medium text-amber-900">
+                <div className="bg-amber-50/90 border border-amber-200/80 rounded-2xl p-4 sm:p-5 mb-6 sm:mb-8 flex items-start gap-3 shadow-sm">
+                  <div className="p-2 bg-amber-100 rounded-xl flex-shrink-0">
+                    <AlertTriangle className="w-5 h-5 text-amber-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-semibold text-amber-900">
                       {lowStockCount} product{lowStockCount > 1 ? 's' : ''} need restocking
                     </p>
-                    <p className="text-sm text-amber-700 mt-1">
+                    <p className="text-sm text-amber-800/90 mt-0.5">
                       {lowStockProducts.map((p) => p.name).join(', ')} {lowStockCount <= 2 ? 'is' : 'are'} below your reorder point.
                     </p>
                   </div>
                 </div>
               )}
 
-              {/* Expiring Soon Alert */}
+              {/* Expiring Soon Alert - polished */}
               {(expiringSoonProducts.length > 0 || expiredProducts.length > 0) && (
-                <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-8">
-                  <p className="font-medium text-red-900 mb-2">
+                <div className="bg-red-50/90 border border-red-200/80 rounded-2xl p-4 sm:p-5 mb-6 sm:mb-8 shadow-sm">
+                  <p className="font-semibold text-red-900 mb-1">
                     {expiredProducts.length > 0 && (
-                      <span>{expiredProducts.length} product{expiredProducts.length > 1 ? 's' : ''} expired</span>
+                      <span>{expiredProducts.length} expired</span>
                     )}
                     {expiredProducts.length > 0 && expiringSoonProducts.length > 0 && ' · '}
                     {expiringSoonProducts.length > 0 && (
                       <span>{expiringSoonProducts.length} expiring soon</span>
                     )}
                   </p>
-                  <p className="text-sm text-red-700">
+                  <p className="text-sm text-red-800/90">
                     {(expiredProducts.length > 0 ? expiredProducts : expiringSoonProducts)
                       .map((p) => {
                         const status = getExpiryStatus(p);
-                        const days = p.best_before_date
-                          ? Math.ceil((new Date(p.best_before_date).getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
-                          : 0;
                         return `${p.name}${status ? ` (${status.label})` : ''}`;
                       })
                       .join(', ')}
@@ -437,22 +458,22 @@ export function InventoryDashboard() {
               )}
 
               {/* Products Table */}
-              <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-                <div className="px-6 py-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm">
+                <div className="px-4 sm:px-6 py-4 border-b border-slate-200/80 flex flex-col gap-4">
                   <h2 className="font-semibold text-slate-900">Recent Products</h2>
-                  <div className="flex gap-2">
-                    <div className="relative">
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <div className="relative flex-1">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                       <input
                         type="text"
                         placeholder="Search products..."
-                        className="pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-sm w-48 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-slate-50/50"
                       />
                     </div>
                     <div className="flex gap-2">
                       <button
                         onClick={() => setScannerOpen(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors min-h-[44px]"
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl text-sm font-medium transition-colors min-h-[44px] shadow-sm"
                       >
                         <Scan className="w-4 h-4" />
                         Scan to add
@@ -463,7 +484,7 @@ export function InventoryDashboard() {
                           setAddModalPrefilled(null);
                           setAddModalOpen(true);
                         }}
-                        className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-medium transition-colors min-h-[44px]"
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white rounded-xl text-sm font-medium transition-colors min-h-[44px] shadow-sm"
                       >
                         <Plus className="w-4 h-4" />
                         Add Product
@@ -529,22 +550,22 @@ export function InventoryDashboard() {
                     </tbody>
                   </table>
                 </div>
-                {/* Mobile cards */}
-                <div className="md:hidden divide-y divide-slate-200">
+                {/* Mobile cards - polished */}
+                <div className="md:hidden divide-y divide-slate-100">
                   {(loading ? [] : products).map((product) => {
                     const isLowStock = product.quantity <= (product.low_stock_threshold ?? 5);
                     const expiryStatus = getExpiryStatus(product);
                     return (
-                      <div key={product.id} className="p-4 hover:bg-slate-50">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <span className="font-medium text-slate-900">{product.name}</span>
-                            <div className="flex flex-wrap gap-1 mt-1">
-                              {isLowStock && <span className="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">Low stock</span>}
-                              {expiryStatus && <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${expiryStatus.className}`}>{expiryStatus.label}</span>}
+                      <div key={product.id} className="p-4 active:bg-slate-50/50 transition-colors">
+                        <div className="flex justify-between items-start gap-3">
+                          <div className="min-w-0 flex-1">
+                            <span className="font-medium text-slate-900 block truncate">{product.name}</span>
+                            <div className="flex flex-wrap gap-1.5 mt-3">
+                              {isLowStock && <span className="inline-flex px-2.5 py-1 rounded-lg text-xs font-medium bg-amber-100 text-amber-800">Low stock</span>}
+                              {expiryStatus && <span className={`inline-flex px-2.5 py-1 rounded-lg text-xs font-medium ${expiryStatus.className}`}>{expiryStatus.label}</span>}
                             </div>
-                            <p className="text-sm text-slate-600 mt-1">
-                              {product.categories?.name || '-'} · ${Number(product.price).toFixed(2)} · Qty: {product.quantity}
+                            <p className="text-sm text-slate-500 mt-2">
+                              {product.categories?.name || 'Uncategorized'} · ${Number(product.price).toFixed(2)} · Qty: {product.quantity}
                             </p>
                           </div>
                           <button
@@ -553,7 +574,7 @@ export function InventoryDashboard() {
                               setAddModalPrefilled(null);
                               setAddModalOpen(true);
                             }}
-                            className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-1 min-h-[44px] min-w-[44px] justify-end"
+                            className="flex-shrink-0 flex items-center gap-1 px-3 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 active:bg-blue-200 rounded-xl text-sm font-medium min-h-[44px] transition-colors"
                           >
                             Edit <ChevronRight className="w-4 h-4" />
                           </button>
@@ -569,49 +590,49 @@ export function InventoryDashboard() {
           {/* Products */}
           {activeTab === 'Products' && (
             <>
-              <div className="mb-8">
-                <h1 className="text-2xl font-bold text-slate-900">Products</h1>
-                <p className="text-slate-600 mt-1">
+              <div className="mb-6 sm:mb-8">
+                <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Products</h1>
+                <p className="text-slate-600 mt-0.5 text-sm sm:text-base">
                   Manage your product catalog
                 </p>
               </div>
-              <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-                <div className="px-6 py-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                  <div className="flex gap-2 flex-wrap">
-                    <div className="relative">
+              <div className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm">
+                <div className="px-4 sm:px-6 py-4 border-b border-slate-200/80 flex flex-col gap-4">
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <div className="relative flex-1">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                       <input
                         type="text"
                         placeholder="Search products..."
-                        className="pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-sm w-48 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-slate-50/50"
                       />
                     </div>
-                    <select className="px-4 py-2 border border-slate-200 rounded-lg text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <select className="px-4 py-2.5 border border-slate-200 rounded-xl text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20 bg-slate-50/50">
                       <option>All Categories</option>
                       {categories.map((c) => (
                         <option key={c.id}>{c.name}</option>
                       ))}
                     </select>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setScannerOpen(true)}
-                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
-                    >
-                      <Scan className="w-4 h-4" />
-                      Scan to add
-                    </button>
-                    <button
-                      onClick={() => {
-                        setEditProduct(null);
-                        setAddModalPrefilled(null);
-                        setAddModalOpen(true);
-                      }}
-                      className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-medium transition-colors"
-                    >
-                      <Plus className="w-4 h-4" />
-                      Add Product
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setScannerOpen(true)}
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium min-h-[44px] shadow-sm"
+                      >
+                        <Scan className="w-4 h-4" />
+                        Scan
+                      </button>
+                      <button
+                        onClick={() => {
+                          setEditProduct(null);
+                          setAddModalPrefilled(null);
+                          setAddModalOpen(true);
+                        }}
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-medium min-h-[44px] shadow-sm"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Add
+                      </button>
+                    </div>
                   </div>
                 </div>
                 {/* Desktop table */}
@@ -672,22 +693,22 @@ export function InventoryDashboard() {
                     </tbody>
                   </table>
                 </div>
-                {/* Mobile cards */}
-                <div className="md:hidden divide-y divide-slate-200">
+                {/* Mobile cards - polished */}
+                <div className="md:hidden divide-y divide-slate-100">
                   {products.map((product) => {
                     const isLowStock = product.quantity <= (product.low_stock_threshold ?? 5);
                     const expiryStatus = getExpiryStatus(product);
                     return (
-                      <div key={product.id} className="p-4 hover:bg-slate-50">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <span className="font-medium text-slate-900">{product.name}</span>
-                            <div className="flex flex-wrap gap-1 mt-1">
-                              {isLowStock && <span className="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">Low stock</span>}
-                              {expiryStatus && <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${expiryStatus.className}`}>{expiryStatus.label}</span>}
+                      <div key={product.id} className="p-4 active:bg-slate-50/50 transition-colors">
+                        <div className="flex justify-between items-start gap-3">
+                          <div className="min-w-0 flex-1">
+                            <span className="font-medium text-slate-900 block truncate">{product.name}</span>
+                            <div className="flex flex-wrap gap-1.5 mt-3">
+                              {isLowStock && <span className="inline-flex px-2.5 py-1 rounded-lg text-xs font-medium bg-amber-100 text-amber-800">Low stock</span>}
+                              {expiryStatus && <span className={`inline-flex px-2.5 py-1 rounded-lg text-xs font-medium ${expiryStatus.className}`}>{expiryStatus.label}</span>}
                             </div>
-                            <p className="text-sm text-slate-600 mt-1">
-                              {product.categories?.name || '-'} · ${Number(product.price).toFixed(2)} · Qty: {product.quantity}
+                            <p className="text-sm text-slate-500 mt-2">
+                              {product.categories?.name || 'Uncategorized'} · ${Number(product.price).toFixed(2)} · Qty: {product.quantity}
                             </p>
                           </div>
                           <button
@@ -696,7 +717,7 @@ export function InventoryDashboard() {
                               setAddModalPrefilled(null);
                               setAddModalOpen(true);
                             }}
-                            className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-1 min-h-[44px] min-w-[44px] justify-end"
+                            className="flex-shrink-0 flex items-center gap-1 px-3 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 active:bg-blue-200 rounded-xl text-sm font-medium min-h-[44px] transition-colors"
                           >
                             Edit <ChevronRight className="w-4 h-4" />
                           </button>
@@ -712,19 +733,19 @@ export function InventoryDashboard() {
           {/* Categories */}
           {activeTab === 'Categories' && (
             <>
-              <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                  <h1 className="text-2xl font-bold text-slate-900">Categories</h1>
-                  <p className="text-slate-600 mt-1">Organize your products</p>
+                  <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Categories</h1>
+                  <p className="text-slate-600 mt-0.5 text-sm sm:text-base">Organize your products</p>
                 </div>
-                <button className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-medium transition-colors">
+                <button className="flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-medium min-h-[44px] shadow-sm">
                   <Plus className="w-4 h-4" />
                   Add Category
                 </button>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 {categoriesWithCount.map((cat) => (
-                  <div key={cat.name} className="bg-white rounded-xl border border-slate-200 p-6 hover:border-slate-300 transition-colors">
+                  <div key={cat.name} className="bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow">
                     <div className="flex items-start justify-between">
                       <div>
                         <h3 className="font-semibold text-slate-900">{cat.name}</h3>
@@ -745,9 +766,9 @@ export function InventoryDashboard() {
           {/* Stock */}
           {activeTab === 'Stock' && (
             <>
-              <div className="mb-8">
-                <h1 className="text-2xl font-bold text-slate-900">Stock Management</h1>
-                <p className="text-slate-600 mt-1">Receive stock and make adjustments</p>
+              <div className="mb-6 sm:mb-8">
+                <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Stock Management</h1>
+                <p className="text-slate-600 mt-0.5 text-sm sm:text-base">Receive stock and make adjustments</p>
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2 space-y-4">
@@ -830,9 +851,9 @@ export function InventoryDashboard() {
           {/* Reports */}
           {activeTab === 'Reports' && (
             <>
-              <div className="mb-8">
-                <h1 className="text-2xl font-bold text-slate-900">Reports</h1>
-                <p className="text-slate-600 mt-1">Insights and analytics</p>
+              <div className="mb-6 sm:mb-8">
+                <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Reports</h1>
+                <p className="text-slate-600 mt-0.5 text-sm sm:text-base">Insights and analytics</p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-white rounded-xl border border-slate-200 p-6">
