@@ -25,11 +25,8 @@ export function BarcodeScannerModal({ isOpen, onClose, onScan }: Props) {
         setScanning(true);
         const reader = new BrowserMultiFormatReader();
 
-        const devices = await reader.listVideoInputDevices();
-        const videoDevice = devices[0]?.deviceId;
-
         const controls = await reader.decodeFromVideoDevice(
-          videoDevice || undefined,
+          undefined, // Uses facingMode: 'environment' - back camera on mobile
           videoRef.current,
           (result, _err, controls) => {
             if (result) {
