@@ -33,7 +33,7 @@ export function CheckoutPage() {
               <Code2 className="w-6 h-6 text-white" />
             </div>
             <span className="font-bold text-xl tracking-tight text-slate-900">
-              Store Warden
+              Tech to Store
             </span>
           </Link>
           <div className="flex items-center gap-2 text-sm text-slate-500">
@@ -74,7 +74,7 @@ export function CheckoutPage() {
                 Finalize Your Order
               </h1>
               <p className="text-slate-600 mb-8">
-                Complete your details below to get started with Store Warden.
+                Complete your details below to get started with Tech to Store.
               </p>
 
               <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6">

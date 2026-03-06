@@ -4,7 +4,7 @@ import { Quote } from 'lucide-react';
 const testimonials = [
 {
   quote:
-  'Store Warden transformed our online presence. Sales up 40% in 3 months. The team understood exactly what we needed as a local retailer.',
+  'Tech to Store transformed our online presence. Sales up 40% in 3 months. The team understood exactly what we needed as a local retailer.',
   author: 'Sarah Chen',
   role: 'Owner, Maple Goods Co.',
   image: 'SC'
@@ -33,7 +33,7 @@ export function Testimonials() {
             Trusted by Canadian Leaders
           </h2>
           <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-            Join hundreds of businesses that rely on Store Warden for their
+            Join hundreds of businesses that rely on Tech to Store for their
             digital success.
           </p>
         </div>

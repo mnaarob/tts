@@ -74,6 +74,18 @@ Usually 5–30 minutes. Vercel will issue an SSL certificate automatically.
 
 ---
 
+## 7. Add environment variables (required)
+
+**If your deployed site shows a blank page**, you need to add these in Vercel:
+
+1. Vercel project → **Settings** → **Environment Variables**
+2. Add:
+   - `VITE_SUPABASE_URL` = `https://iyubmgzxypcanrbyuyck.supabase.co`
+   - `VITE_SUPABASE_ANON_KEY` = your Supabase publishable key
+3. Redeploy (Deployments → ... → Redeploy)
+
+---
+
 ## After deployment
 
 - Your app will be live at techtostore.com

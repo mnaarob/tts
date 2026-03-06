@@ -57,7 +57,7 @@ export function Features() {
               Designed for Trust
             </h2>
             <p className="text-lg text-slate-300 mb-8 leading-relaxed">
-              Store Warden isn't just another software provider. We're your
+              Tech to Store isn't just another software provider. We're your
               technology partner, committed to the long-term success of your
               business with tools that actually work.
             </p>
