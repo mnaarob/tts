@@ -62,8 +62,8 @@ export function RecentProducts() {
               />
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex gap-2">
+            {/* Action Buttons - stacked on mobile, row on desktop */}
+            <div className="flex flex-col sm:flex-row gap-2">
               <button className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] bg-indigo-600 text-white text-sm font-medium rounded-xl hover:bg-indigo-700 active:bg-indigo-800 transition-colors">
                 <ScanLineIcon className="w-4 h-4" />
                 <span>Scan to add</span>
