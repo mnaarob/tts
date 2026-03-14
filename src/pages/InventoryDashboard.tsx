@@ -133,6 +133,9 @@ export function InventoryDashboard() {
   const [inviteSuccess, setInviteSuccess] = useState<{ message: string; employeeId: string } | null>(null);
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState(false);
+  // canSeeTeam: any authenticated store member can view the team list
+  const canSeeTeam = !!claims?.store_id;
+  // canManageTeam: only owner/manager can invite or remove members
   const canManageTeam = claims?.store_role === 'owner' || claims?.store_role === 'manager';
 
   const fetchData = React.useCallback(async () => {
@@ -443,7 +446,7 @@ export function InventoryDashboard() {
               My Inventory
             </p>
             {SIDEBAR_LINKS.filter(
-              (link) => link.name !== 'Team' || canManageTeam
+              (link) => link.name !== 'Team' || canSeeTeam
             ).map((link) => (
               <button
                 key={link.name}
