@@ -22,39 +22,52 @@ export function useOrganization() {
     }
 
     async function fetchOrg() {
-      // Try new multi-tenant schema first: store_admins → stores
-      const { data: sa } = await supabase
-        .from('store_admins')
-        .select('store_id, role')
-        .eq('user_id', user!.id)
-        .maybeSingle();
+      // Fetch both in parallel:
+      // - organizations table: provides the UUID used by products/categories/stock
+      // - store_admins → stores: provides the real store display name
+      const [orgRes, saRes] = await Promise.all([
+        supabase
+          .from('organizations')
+          .select('id, name, owner_id')
+          .eq('owner_id', user!.id)
+          .maybeSingle(),
+        supabase
+          .from('store_admins')
+          .select('store_id')
+          .eq('user_id', user!.id)
+          .maybeSingle(),
+      ]);
 
-      if (sa?.store_id) {
+      // Try to get the real store name from the stores table
+      let storeName: string | null = null;
+      if (saRes.data?.store_id) {
         const { data: store } = await supabase
           .from('stores')
-          .select('id, name')
-          .eq('id', sa.store_id)
+          .select('name')
+          .eq('id', saRes.data.store_id)
           .maybeSingle();
-
-        if (store) {
-          setOrganization({ id: store.id, name: store.name, owner_id: user!.id });
-          setLoading(false);
-          return;
-        }
+        storeName = store?.name ?? null;
       }
 
-      // Fall back to legacy organizations table
-      const { data, error: err } = await supabase
-        .from('organizations')
-        .select('id, name, owner_id')
-        .eq('owner_id', user!.id)
-        .maybeSingle();
-
-      if (err) {
-        setError(err.message);
+      if (orgRes.error) {
+        setError(orgRes.error.message);
         setOrganization(null);
+      } else if (orgRes.data) {
+        // Use the organization UUID for DB queries, but show the real store name
+        setOrganization({
+          id: orgRes.data.id,
+          name: storeName ?? orgRes.data.name,
+          owner_id: orgRes.data.owner_id,
+        });
+      } else if (saRes.data?.store_id && storeName) {
+        // No organizations row yet — use the store directly
+        setOrganization({
+          id: saRes.data.store_id,
+          name: storeName,
+          owner_id: user!.id,
+        });
       } else {
-        setOrganization(data);
+        setOrganization(null);
       }
       setLoading(false);
     }
