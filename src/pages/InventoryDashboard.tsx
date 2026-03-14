@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -6,6 +6,7 @@ import {
   FolderTree,
   TrendingUp,
   BarChart3,
+  Users,
   Plus,
   Search,
   AlertTriangle,
@@ -19,13 +20,23 @@ import {
   Scan,
   Menu,
   X,
+  Mail,
+  ChevronDown,
+  UserPlus,
+  Trash2,
+  CheckCircle,
+  AlertCircle,
+  Copy,
+  Check,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useOrganization } from '../hooks/useOrganization';
 import { useBarcodeLookup } from '../hooks/useBarcodeLookup';
+import { useJwtClaims } from '../hooks/useJwtClaims';
 import { BarcodeScannerModal } from '../components/BarcodeScannerModal';
 import { AddProductModal } from '../components/AddProductModal';
+import { MfaBanner } from '../components/MfaBanner';
 
 type Product = {
   id: string;
@@ -74,13 +85,33 @@ const SIDEBAR_LINKS = [
   { name: 'Categories', icon: FolderTree },
   { name: 'Stock', icon: TrendingUp },
   { name: 'Reports', icon: BarChart3 },
+  { name: 'Team', icon: Users },
 ];
+
+type TeamMember = {
+  user_id: string;
+  email: string;
+  full_name: string;
+  role: 'owner' | 'manager' | 'staff';
+  employee_id: string | null;
+  joined_at: string;
+};
+
+const ROLE_BADGE: Record<string, string> = {
+  owner:   'bg-indigo-100 text-indigo-700',
+  manager: 'bg-blue-100 text-blue-700',
+  staff:   'bg-slate-100 text-slate-600',
+};
+const ROLE_LABELS: Record<string, string> = {
+  owner: 'Owner', manager: 'Manager', staff: 'Staff',
+};
 
 export function InventoryDashboard() {
   const [activeTab, setActiveTab] = useState('Dashboard');
   const { signOut } = useAuth();
   const { organization, loading: orgLoading } = useOrganization();
   const { lookup } = useBarcodeLookup(organization?.id || '');
+  const claims = useJwtClaims();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [stockMovements, setStockMovements] = useState<StockMovement[]>([]);
@@ -90,6 +121,19 @@ export function InventoryDashboard() {
   const [addModalPrefilled, setAddModalPrefilled] = useState<{ barcode: string; name: string; brand?: string; imageUrl?: string; categories?: string } | null>(null);
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Team tab state
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [teamLoading, setTeamLoading] = useState(false);
+  const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
+  const [removeLoading, setRemoveLoading] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteRole, setInviteRole] = useState<'manager' | 'staff'>('staff');
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [inviteSuccess, setInviteSuccess] = useState<{ message: string; employeeId: string } | null>(null);
+  const [inviteError, setInviteError] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState(false);
+  const canManageTeam = claims?.store_role === 'owner' || claims?.store_role === 'manager';
 
   const fetchData = React.useCallback(async () => {
     if (!organization) return;
@@ -121,6 +165,67 @@ export function InventoryDashboard() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  const fetchTeam = useCallback(async () => {
+    if (!claims?.store_id) return;
+    setTeamLoading(true);
+    const { data } = await supabase.rpc('get_store_team', { p_store_id: claims.store_id });
+    setTeamMembers((data as TeamMember[]) || []);
+    setTeamLoading(false);
+  }, [claims?.store_id]);
+
+  useEffect(() => {
+    if (activeTab === 'Team') fetchTeam();
+  }, [activeTab, fetchTeam]);
+
+  async function handleTeamInvite(e: React.FormEvent) {
+    e.preventDefault();
+    if (!claims?.store_id) return;
+    setInviteLoading(true);
+    setInviteSuccess(null);
+    setInviteError(null);
+
+    // Generate a unique employee ID
+    const { data: generatedId, error: genError } = await supabase.rpc('generate_employee_id', {
+      p_store_id: claims.store_id,
+    });
+    if (genError || !generatedId) {
+      setInviteError('Could not generate Employee ID. Please try again.');
+      setInviteLoading(false);
+      return;
+    }
+
+    const { error: inviteError } = await supabase.functions.invoke('invite-employee', {
+      body: { store_id: claims.store_id, email: inviteEmail, role: inviteRole, employee_id: generatedId },
+    });
+
+    if (inviteError) {
+      setInviteError(inviteError.message || 'Failed to send invite. Please try again.');
+      setInviteLoading(false);
+      return;
+    }
+
+    setInviteSuccess({ message: `Invite sent to ${inviteEmail}`, employeeId: generatedId as string });
+    setInviteEmail('');
+    setInviteRole('staff');
+    setInviteLoading(false);
+    fetchTeam();
+  }
+
+  async function handleRemoveMember(userId: string) {
+    if (!claims?.store_id) return;
+    setRemoveLoading(true);
+    await supabase.from('store_admins').delete().eq('store_id', claims.store_id).eq('user_id', userId);
+    setConfirmRemoveId(null);
+    setRemoveLoading(false);
+    fetchTeam();
+  }
+
+  function copyEmployeeId(id: string) {
+    navigator.clipboard.writeText(id);
+    setCopiedId(true);
+    setTimeout(() => setCopiedId(false), 2000);
+  }
 
   async function handleScan(barcode: string) {
     if (!organization) return;
@@ -337,7 +442,9 @@ export function InventoryDashboard() {
             <p className="px-3 py-2 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
               My Inventory
             </p>
-            {SIDEBAR_LINKS.map((link) => (
+            {SIDEBAR_LINKS.filter(
+              (link) => link.name !== 'Team' || canManageTeam
+            ).map((link) => (
               <button
                 key={link.name}
                 onClick={() => {
@@ -374,6 +481,8 @@ export function InventoryDashboard() {
                   Overview of your inventory
                 </p>
               </div>
+
+              <MfaBanner />
 
               {/* Stats Cards - 2x2 on mobile, polished */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
@@ -872,6 +981,254 @@ export function InventoryDashboard() {
                       </div>
                     </div>
                   ))}
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Team Tab */}
+          {activeTab === 'Team' && (
+            <>
+              <div className="mb-6 sm:mb-8">
+                <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Team</h1>
+                <p className="text-slate-600 mt-0.5 text-sm sm:text-base">
+                  Manage who has access to your store
+                </p>
+              </div>
+
+              {/* Invite form */}
+              {canManageTeam && (
+                <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5 sm:p-6 mb-6">
+                  <h2 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                    <UserPlus className="w-5 h-5 text-slate-500" />
+                    Invite a team member
+                  </h2>
+                  <form onSubmit={handleTeamInvite} className="flex flex-col sm:flex-row gap-3">
+                    <div className="relative flex-1">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <input
+                        type="email"
+                        required
+                        placeholder="colleague@example.com"
+                        value={inviteEmail}
+                        onChange={(e) => setInviteEmail(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2.5 min-h-[44px] border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-slate-50/50"
+                      />
+                    </div>
+                    <div className="relative">
+                      <select
+                        value={inviteRole}
+                        onChange={(e) => setInviteRole(e.target.value as 'manager' | 'staff')}
+                        className="appearance-none w-full sm:w-36 px-4 pr-9 py-2.5 min-h-[44px] border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-slate-50/50"
+                      >
+                        <option value="manager">Manager</option>
+                        <option value="staff">Staff</option>
+                      </select>
+                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={inviteLoading}
+                      className="flex items-center justify-center gap-2 px-5 py-2.5 min-h-[44px] bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl text-sm font-medium transition-colors disabled:opacity-50 shadow-sm"
+                    >
+                      {inviteLoading ? 'Sending…' : 'Send Invite'}
+                    </button>
+                  </form>
+
+                  {inviteSuccess && (
+                    <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-3 px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-700">
+                      <CheckCircle className="w-4 h-4 flex-shrink-0" />
+                      <div className="flex-1">
+                        <p className="font-medium">{inviteSuccess.message}</p>
+                        <p className="mt-0.5">
+                          Their Employee ID is{' '}
+                          <span className="font-mono font-bold tracking-widest text-emerald-800">
+                            {inviteSuccess.employeeId}
+                          </span>
+                          {' '}— share it with them so they can log in.
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => copyEmployeeId(inviteSuccess.employeeId)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 rounded-lg text-xs font-medium transition-colors flex-shrink-0"
+                      >
+                        {copiedId ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                        {copiedId ? 'Copied!' : 'Copy ID'}
+                      </button>
+                    </div>
+                  )}
+                  {inviteError && (
+                    <div className="mt-3 flex items-center gap-2 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+                      <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                      {inviteError}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Team members table */}
+              <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+                <div className="px-5 sm:px-6 py-4 border-b border-slate-200/80 flex items-center justify-between">
+                  <h2 className="font-semibold text-slate-900">
+                    Team members
+                    {teamMembers.length > 0 && (
+                      <span className="ml-2 px-2 py-0.5 bg-slate-100 text-slate-600 text-xs rounded-full font-normal">
+                        {teamMembers.length}
+                      </span>
+                    )}
+                  </h2>
+                </div>
+
+                {/* Desktop table */}
+                <div className="hidden md:block overflow-x-auto">
+                  {teamLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+                    </div>
+                  ) : teamMembers.length === 0 ? (
+                    <div className="py-12 text-center text-slate-500 text-sm">No team members yet.</div>
+                  ) : (
+                    <table className="w-full">
+                      <thead>
+                        <tr className="bg-slate-50 border-b border-slate-200 text-left">
+                          <th className="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Name</th>
+                          <th className="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Email</th>
+                          <th className="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Role</th>
+                          <th className="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Employee ID</th>
+                          <th className="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Joined</th>
+                          {canManageTeam && (
+                            <th className="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
+                          )}
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {teamMembers.map((m) => {
+                          const isConfirming = confirmRemoveId === m.user_id;
+                          return (
+                            <tr key={m.user_id} className="hover:bg-slate-50 transition-colors">
+                              <td className="px-6 py-4 font-medium text-slate-900 text-sm">{m.full_name}</td>
+                              <td className="px-6 py-4 text-slate-600 text-sm">{m.email}</td>
+                              <td className="px-6 py-4">
+                                <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${ROLE_BADGE[m.role]}`}>
+                                  {ROLE_LABELS[m.role]}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4">
+                                <span className="font-mono text-sm font-semibold text-slate-800 tracking-widest">
+                                  {m.employee_id ?? '—'}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 text-slate-500 text-sm">
+                                {new Date(m.joined_at).toLocaleDateString()}
+                              </td>
+                              {canManageTeam && (
+                                <td className="px-6 py-4">
+                                  {m.role === 'owner' ? (
+                                    <span className="text-xs text-slate-400">—</span>
+                                  ) : isConfirming ? (
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-sm text-slate-600">Remove?</span>
+                                      <button
+                                        onClick={() => handleRemoveMember(m.user_id)}
+                                        disabled={removeLoading}
+                                        className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-medium disabled:opacity-50"
+                                      >
+                                        {removeLoading ? '…' : 'Yes'}
+                                      </button>
+                                      <button
+                                        onClick={() => setConfirmRemoveId(null)}
+                                        className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium"
+                                      >
+                                        Cancel
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <button
+                                      onClick={() => setConfirmRemoveId(m.user_id)}
+                                      className="text-slate-400 hover:text-red-600 transition-colors"
+                                      aria-label={`Remove ${m.full_name}`}
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                  )}
+                                </td>
+                              )}
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+
+                {/* Mobile cards */}
+                <div className="md:hidden divide-y divide-slate-100">
+                  {teamLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+                    </div>
+                  ) : teamMembers.length === 0 ? (
+                    <div className="py-12 text-center text-slate-500 text-sm">No team members yet.</div>
+                  ) : (
+                    teamMembers.map((m) => {
+                      const isConfirming = confirmRemoveId === m.user_id;
+                      return (
+                        <div key={m.user_id} className="p-4">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0 flex-1">
+                              <p className="font-medium text-slate-900 truncate">{m.full_name}</p>
+                              <p className="text-sm text-slate-500 mt-0.5 truncate">{m.email}</p>
+                              <div className="flex flex-wrap items-center gap-2 mt-2">
+                                <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${ROLE_BADGE[m.role]}`}>
+                                  {ROLE_LABELS[m.role]}
+                                </span>
+                                {m.employee_id && (
+                                  <span className="font-mono text-xs font-bold text-slate-700 tracking-widest bg-slate-100 px-2 py-1 rounded-lg">
+                                    {m.employee_id}
+                                  </span>
+                                )}
+                                <span className="text-xs text-slate-400">
+                                  Joined {new Date(m.joined_at).toLocaleDateString()}
+                                </span>
+                              </div>
+                            </div>
+                            {canManageTeam && m.role !== 'owner' && (
+                              <div className="flex-shrink-0">
+                                {isConfirming ? (
+                                  <div className="flex flex-col items-end gap-1.5">
+                                    <span className="text-sm text-slate-600">Remove?</span>
+                                    <div className="flex gap-2">
+                                      <button
+                                        onClick={() => handleRemoveMember(m.user_id)}
+                                        disabled={removeLoading}
+                                        className="px-3 py-1.5 bg-red-600 text-white rounded-lg text-xs font-medium disabled:opacity-50"
+                                      >
+                                        {removeLoading ? '…' : 'Yes'}
+                                      </button>
+                                      <button
+                                        onClick={() => setConfirmRemoveId(null)}
+                                        className="px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg text-xs font-medium"
+                                      >
+                                        Cancel
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <button
+                                    onClick={() => setConfirmRemoveId(m.user_id)}
+                                    className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl min-h-[44px] min-w-[44px] flex items-center justify-center transition-colors"
+                                    aria-label={`Remove ${m.full_name}`}
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
                 </div>
               </div>
             </>
