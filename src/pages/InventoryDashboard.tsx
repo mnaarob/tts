@@ -98,13 +98,16 @@ type TeamMember = {
 };
 
 const ROLE_BADGE: Record<string, string> = {
-  owner:   'bg-indigo-100 text-indigo-700',
-  manager: 'bg-blue-100 text-blue-700',
-  staff:   'bg-slate-100 text-slate-600',
+  owner:     'bg-indigo-100 text-indigo-700',
+  manager:   'bg-blue-100 text-blue-700',
+  staff:     'bg-slate-100 text-slate-600',
+  developer: 'bg-violet-100 text-violet-700',
 };
 const ROLE_LABELS: Record<string, string> = {
-  owner: 'Owner', manager: 'Manager', staff: 'Staff',
+  owner: 'Owner', manager: 'Manager', staff: 'Staff', developer: 'Developer',
 };
+function roleLabel(role: string) { return ROLE_LABELS[role] ?? role; }
+function roleBadge(role: string) { return ROLE_BADGE[role] ?? 'bg-slate-100 text-slate-600'; }
 
 export function InventoryDashboard() {
   const [activeTab, setActiveTab] = useState('Dashboard');
@@ -178,8 +181,8 @@ export function InventoryDashboard() {
   }, [claims?.store_id]);
 
   useEffect(() => {
-    if (activeTab === 'Team') fetchTeam();
-  }, [activeTab, fetchTeam]);
+    if (activeTab === 'Team' && claims?.store_id) fetchTeam();
+  }, [activeTab, fetchTeam, claims?.store_id]);
 
   async function handleTeamInvite(e: React.FormEvent) {
     e.preventDefault();
@@ -1112,8 +1115,8 @@ export function InventoryDashboard() {
                               <td className="px-6 py-4 font-medium text-slate-900 text-sm">{m.full_name}</td>
                               <td className="px-6 py-4 text-slate-600 text-sm">{m.email}</td>
                               <td className="px-6 py-4">
-                                <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${ROLE_BADGE[m.role]}`}>
-                                  {ROLE_LABELS[m.role]}
+                                <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${roleBadge(m.role)}`}>
+                                  {roleLabel(m.role)}
                                 </span>
                               </td>
                               <td className="px-6 py-4">
@@ -1182,8 +1185,8 @@ export function InventoryDashboard() {
                               <p className="font-medium text-slate-900 truncate">{m.full_name}</p>
                               <p className="text-sm text-slate-500 mt-0.5 truncate">{m.email}</p>
                               <div className="flex flex-wrap items-center gap-2 mt-2">
-                                <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${ROLE_BADGE[m.role]}`}>
-                                  {ROLE_LABELS[m.role]}
+                                <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${roleBadge(m.role)}`}>
+                                  {roleLabel(m.role)}
                                 </span>
                                 {m.employee_id && (
                                   <span className="font-mono text-xs font-bold text-slate-700 tracking-widest bg-slate-100 px-2 py-1 rounded-lg">
