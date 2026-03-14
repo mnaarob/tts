@@ -21,28 +21,34 @@ export function useOrganization() {
       return;
     }
 
-    async function fetchOrCreateOrg() {
-      let { data, error: err } = await supabase
-        .from('organizations')
-        .select('id, name, owner_id')
-        .eq('owner_id', user.id)
+    async function fetchOrg() {
+      // Try new multi-tenant schema first: store_admins → stores
+      const { data: sa } = await supabase
+        .from('store_admins')
+        .select('store_id, role')
+        .eq('user_id', user!.id)
         .maybeSingle();
 
-      // Create org if it doesn't exist (e.g. user signed up before we removed the trigger)
-      if (!err && !data) {
-        const storeName = user.user_metadata?.store_name || 'My Store';
-        const { data: newOrg, error: insertErr } = await supabase
-          .from('organizations')
-          .insert({ name: storeName, owner_id: user.id })
-          .select('id, name, owner_id')
-          .single();
+      if (sa?.store_id) {
+        const { data: store } = await supabase
+          .from('stores')
+          .select('id, name')
+          .eq('id', sa.store_id)
+          .maybeSingle();
 
-        if (!insertErr) {
-          data = newOrg;
-        } else {
-          err = insertErr;
+        if (store) {
+          setOrganization({ id: store.id, name: store.name, owner_id: user!.id });
+          setLoading(false);
+          return;
         }
       }
+
+      // Fall back to legacy organizations table
+      const { data, error: err } = await supabase
+        .from('organizations')
+        .select('id, name, owner_id')
+        .eq('owner_id', user!.id)
+        .maybeSingle();
 
       if (err) {
         setError(err.message);
@@ -53,7 +59,7 @@ export function useOrganization() {
       setLoading(false);
     }
 
-    fetchOrCreateOrg();
+    fetchOrg();
   }, [user]);
 
   return { organization, loading, error };
