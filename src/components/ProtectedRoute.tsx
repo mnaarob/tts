@@ -25,15 +25,12 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Check JWT claims for store_id
-  const claims = session?.access_token ? decodeJwt(session.access_token) : null;
-  if (!claims?.store_id) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-
-  // Optional role guard
-  if (allowedRoles && !allowedRoles.includes(claims.store_role)) {
-    return <Navigate to="/inventory" replace />;
+  // Optional role guard — only enforced when JWT claims are present
+  if (allowedRoles && session?.access_token) {
+    const claims = decodeJwt(session.access_token);
+    if (claims && !allowedRoles.includes(claims.store_role)) {
+      return <Navigate to="/inventory" replace />;
+    }
   }
 
   return <>{children}</>;
