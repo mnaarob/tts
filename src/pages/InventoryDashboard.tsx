@@ -110,7 +110,13 @@ function roleLabel(role: string) { return ROLE_LABELS[role] ?? role; }
 function roleBadge(role: string) { return ROLE_BADGE[role] ?? 'bg-slate-100 text-slate-600'; }
 
 export function InventoryDashboard() {
-  const [activeTab, setActiveTab] = useState('Dashboard');
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem('tts_active_tab') || 'Dashboard';
+  });
+  const changeTab = (tab: string) => {
+    setActiveTab(tab);
+    localStorage.setItem('tts_active_tab', tab);
+  };
   const { signOut } = useAuth();
   const { organization, loading: orgLoading } = useOrganization();
   const { lookup } = useBarcodeLookup(organization?.id || '');
@@ -241,7 +247,16 @@ export function InventoryDashboard() {
   async function handleRemoveMember(userId: string) {
     if (!claims?.store_id) return;
     setRemoveLoading(true);
-    await supabase.from('store_admins').delete().eq('store_id', claims.store_id).eq('user_id', userId);
+    const { data: removed, error: rmErr } = await supabase.rpc('remove_store_member', {
+      p_store_id: claims.store_id,
+      p_user_id: userId,
+    });
+    if (rmErr) {
+      console.error('remove member', rmErr);
+    }
+    if (!removed && !rmErr) {
+      console.warn('Could not remove member — you may not have permission');
+    }
     setConfirmRemoveId(null);
     setRemoveLoading(false);
     fetchTeam();
@@ -474,7 +489,7 @@ export function InventoryDashboard() {
               <button
                 key={link.name}
                 onClick={() => {
-                  setActiveTab(link.name);
+                  changeTab(link.name);
                   setSidebarOpen(false);
                 }}
                 className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all min-h-[48px] ${

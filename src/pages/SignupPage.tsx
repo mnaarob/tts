@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Code2, Store, Hash, Mail, Lock } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../lib/supabase';
 
 export function SignupPage() {
   const [storeName, setStoreName] = useState('');
@@ -20,22 +19,22 @@ export function SignupPage() {
     setError('');
     setLoading(true);
 
-    const { error: signUpError, session } = await signUp(email, password, storeName || undefined);
-    if (signUpError) {
+    if (employeeId.trim().length !== 6) {
       setLoading(false);
-      setError(signUpError.message);
+      setError('Employee ID must be exactly 6 characters.');
       return;
     }
 
-    const { data: valid, error: rpcError } = await supabase.rpc('validate_employee_login', {
-      p_store_name: storeName.trim(),
-      p_employee_id: employeeId.trim().toUpperCase(),
-    });
-
-    if (rpcError || !valid) {
-      await supabase.auth.signOut();
+    // Store name + employee ID are saved as user metadata;
+    // full validation happens on sign-in via validate_employee_login.
+    const { error: signUpError, session } = await signUp(
+      email,
+      password,
+      storeName.trim() || undefined,
+    );
+    if (signUpError) {
       setLoading(false);
-      setError('Store name or Employee ID is incorrect.');
+      setError(signUpError.message);
       return;
     }
 
