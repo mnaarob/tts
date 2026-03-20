@@ -201,12 +201,32 @@ export function InventoryDashboard() {
       return;
     }
 
-    const { error: inviteError } = await supabase.functions.invoke('invite-employee', {
-      body: { store_id: claims.store_id, email: inviteEmail, role: inviteRole, employee_id: generatedId },
+    const { data: inviteData, error: inviteFnError } = await supabase.functions.invoke<{
+      ok?: boolean;
+      error?: string;
+      message?: string;
+    }>('invite-employee', {
+      body: {
+        store_id: claims.store_id,
+        email: inviteEmail.trim(),
+        role: inviteRole,
+        employee_id: generatedId,
+      },
     });
 
-    if (inviteError) {
-      setInviteError(inviteError.message || 'Failed to send invite. Please try again.');
+    if (inviteFnError) {
+      const msg = inviteFnError.message || '';
+      const hint =
+        /not\s*found|404|failed to send/i.test(msg) || msg.includes('Edge Function')
+          ? ' The invite function may not be deployed. Run: supabase functions deploy invite-employee'
+          : '';
+      setInviteError(`${msg}${hint}`);
+      setInviteLoading(false);
+      return;
+    }
+
+    if (inviteData && typeof inviteData === 'object' && inviteData.ok === false) {
+      setInviteError(inviteData.error || 'Invite failed.');
       setInviteLoading(false);
       return;
     }
