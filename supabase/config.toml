@@ -1,5 +1,5 @@
 # Supabase CLI — https://supabase.com/docs/guides/cli/config
-# Deploy: supabase functions deploy invite-employee
+# Per-function config (top-level [functions].verify_jwt is invalid in newer CLI)
 
-[functions]
+[functions.invite-employee]
 verify_jwt = true
