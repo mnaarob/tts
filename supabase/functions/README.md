@@ -6,12 +6,18 @@ Sends team invites: verifies the caller is `owner` or `manager` for the store, i
 
 ### Deploy
 
-1. Install [Supabase CLI](https://supabase.com/docs/guides/cli) and log in: `supabase login`
-2. Link this repo to your project: `supabase link --project-ref <YOUR_PROJECT_REF>`
-3. Deploy:
+1. Install Node/npm (or [Supabase CLI](https://supabase.com/docs/guides/cli) globally).
+2. Log in once (opens browser): `npx supabase login`
+3. From the repo root (with `VITE_SUPABASE_URL` in `.env`):
    ```bash
-   supabase functions deploy invite-employee
+   npm run deploy:functions
    ```
+   This runs `supabase functions deploy invite-employee --project-ref <parsed from .env>` — **no database password or `supabase link` required**.
+
+Alternatively:
+```bash
+npx supabase functions deploy invite-employee --project-ref YOUR_PROJECT_REF
+```
 
 ### Secrets (optional)
 
