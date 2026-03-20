@@ -6,6 +6,8 @@ import { LandingPage } from './pages/LandingPage';
 import { CheckoutPage } from './pages/CheckoutPage';
 import { LoginPage } from './pages/LoginPage';
 import { SignupPage } from './pages/SignupPage';
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
+import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { InventoryDashboard } from './pages/InventoryDashboard';
 
 function App() {
@@ -17,6 +19,8 @@ function App() {
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route
             path="/inventory"
             element={
