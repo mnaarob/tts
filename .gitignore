@@ -17,7 +17,9 @@ dist
 # OS
 .DS_Store
 *.log
-.vercel
+# Vercel CLI cache (keep project link in repo — see .vercel/project.json)
+.vercel/*
+!.vercel/project.json
 
 # Supabase CLI — local cache
 supabase/.temp
