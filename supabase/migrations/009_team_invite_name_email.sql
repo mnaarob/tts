@@ -43,3 +43,6 @@ AS $$
     )
   ORDER BY au.created_at;
 $$;
+
+-- Refresh PostgREST schema cache so the API sees new columns immediately.
+NOTIFY pgrst, 'reload schema';

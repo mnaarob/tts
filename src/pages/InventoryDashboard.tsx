@@ -273,13 +273,20 @@ export function InventoryDashboard() {
     });
 
     if (insErr) {
-      setInviteError(insErr.message || 'Could not add pending employee.');
+      const raw = insErr.message || 'Could not add member.';
+      if (/full_name|schema cache/i.test(raw)) {
+        setInviteError(
+          'Database is missing the latest team update. In Supabase → SQL Editor, run the full script from supabase/migrations/009_team_invite_name_email.sql in this project, then try again.',
+        );
+      } else {
+        setInviteError(raw);
+      }
       setInviteLoading(false);
       return;
     }
 
     setInviteSuccess({
-      message: 'Employee ID created.',
+      message: 'Member added.',
       employeeId: generatedId as string,
     });
     setInviteName('');
@@ -1100,9 +1107,9 @@ export function InventoryDashboard() {
                     Add a team member
                   </h2>
                   <p className="text-sm text-slate-600 mb-4">
-                    Enter their name and email, then generate an Employee ID. They create their account at{' '}
+                    Enter their name and email, then click <strong>Add Member</strong> to create their Employee ID. They sign up at{' '}
                     <span className="font-mono text-xs bg-slate-100 px-1.5 py-0.5 rounded">techtostore.com/#/signup</span>{' '}
-                    using your store name, this ID, the <strong>same email you entered below</strong>, and their password.
+                    with your store name, the ID shown below, the <strong>same email you entered</strong>, and their password.
                   </p>
                   <form onSubmit={handleTeamInvite} className="flex flex-col gap-3">
                     <div className="grid sm:grid-cols-2 gap-3">
@@ -1148,7 +1155,7 @@ export function InventoryDashboard() {
                         disabled={inviteLoading}
                         className="flex items-center justify-center gap-2 px-5 py-2.5 min-h-[44px] bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl text-sm font-medium transition-colors disabled:opacity-50 shadow-sm"
                       >
-                        {inviteLoading ? 'Creating…' : 'Generate Employee ID'}
+                        {inviteLoading ? 'Adding…' : 'Add Member'}
                       </button>
                     </div>
                   </form>
@@ -1158,12 +1165,14 @@ export function InventoryDashboard() {
                       <CheckCircle className="w-4 h-4 flex-shrink-0" />
                       <div className="flex-1">
                         <p className="font-medium">{inviteSuccess.message}</p>
-                        <p className="mt-0.5">
-                          Their Employee ID is{' '}
-                          <span className="font-mono font-bold tracking-widest text-emerald-800">
+                        <p className="mt-1 text-base">
+                          <span className="text-slate-600">Employee ID to share:</span>{' '}
+                          <span className="font-mono font-bold tracking-widest text-emerald-900">
                             {inviteSuccess.employeeId}
                           </span>
-                          . Share the ID with them—they must sign up with the <strong>exact email</strong> you entered, at{' '}
+                        </p>
+                        <p className="mt-1.5 text-sm">
+                          Share this ID with them. They must sign up with the <strong>exact email</strong> you entered, at{' '}
                           <strong>techtostore.com/#/signup</strong>.
                         </p>
                       </div>
@@ -1214,9 +1223,14 @@ export function InventoryDashboard() {
                           className="px-5 sm:px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
                         >
                           <div className="min-w-0">
-                            <p className="font-medium text-slate-900 truncate">
-                              {inv.full_name?.trim() || 'Pending'}
-                            </p>
+                            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                              <p className="font-medium text-slate-900 truncate">
+                                {inv.full_name?.trim() || 'Pending'}
+                              </p>
+                              <span className="font-mono text-sm font-bold text-blue-900 tracking-widest bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-100">
+                                ID {inv.employee_id}
+                              </span>
+                            </div>
                             <p className="text-sm text-slate-500 truncate mt-0.5">
                               {inv.email?.trim() || '—'}
                             </p>
@@ -1224,10 +1238,7 @@ export function InventoryDashboard() {
                               <span className={`inline-flex px-2 py-0.5 rounded-full font-medium ${roleBadge(inv.role)}`}>
                                 {roleLabel(inv.role)}
                               </span>
-                              <span className="font-mono font-semibold text-slate-700 tracking-widest">
-                                {inv.employee_id}
-                              </span>
-                              <span>Sent {new Date(inv.created_at).toLocaleString()}</span>
+                              <span>Added {new Date(inv.created_at).toLocaleString()}</span>
                             </div>
                           </div>
                           <button
