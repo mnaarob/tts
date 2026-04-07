@@ -1,5 +1,5 @@
 # Supabase CLI — https://supabase.com/docs/guides/cli/config
 # Per-function config (top-level [functions].verify_jwt is invalid in newer CLI)
 
-[functions.invite-employee]
+[functions.claim-employee-signup]
 verify_jwt = false

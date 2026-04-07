@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Code2, Store, Hash, Mail, Lock } from 'lucide-react';
+import type { TurnstileInstance } from '@marsidev/react-turnstile';
+import { AuthTurnstile, TURNSTILE_SITE_KEY } from '../components/AuthTurnstile';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 
@@ -11,36 +13,64 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const turnstileRef = useRef<TurnstileInstance | undefined>(undefined);
   const { signIn } = useAuth();
+
+  const resetCaptcha = useCallback(() => {
+    setCaptchaToken(null);
+    turnstileRef.current?.reset();
+  }, []);
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/inventory';
-  const confirmMessage = (location.state as { message?: string })?.message === 'confirm_email';
+  const stateMsg = (location.state as { message?: string })?.message;
+  const confirmMessage = stateMsg === 'confirm_email';
+  const signupCompleteMessage = stateMsg === 'signup_complete';
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
+    if (TURNSTILE_SITE_KEY && !captchaToken) {
+      setError('Complete the verification below.');
+      return;
+    }
     setLoading(true);
 
     // Step 1: Supabase email + password auth
-    const { error: signInError } = await signIn(email, password);
+    const { error: signInError } = await signIn(
+      email,
+      password,
+      captchaToken ?? undefined,
+    );
     if (signInError) {
       setLoading(false);
       setError(signInError.message);
+      resetCaptcha();
       return;
     }
 
     // Step 2: Validate store name + employee ID against DB
+    // Normalize curly/smart quotes to straight apostrophes (phone keyboards auto-correct)
+    const normalizedStoreName = storeName.trim().replace(/[\u2018\u2019\u201C\u201D\u0060]/g, "'");
     const { data: valid, error: rpcError } = await supabase.rpc('validate_employee_login', {
-      p_store_name: storeName.trim(),
+      p_store_name: normalizedStoreName,
       p_employee_id: employeeId.trim().toUpperCase(),
     });
 
-    if (rpcError || !valid) {
-      // Credentials don't match — sign out immediately and reject
+    if (rpcError) {
+      await supabase.auth.signOut();
+      setLoading(false);
+      setError(`Validation failed: ${rpcError.message}`);
+      resetCaptcha();
+      return;
+    }
+
+    if (!valid) {
       await supabase.auth.signOut();
       setLoading(false);
       setError('Store name or Employee ID is incorrect.');
+      resetCaptcha();
       return;
     }
 
@@ -66,6 +96,17 @@ export function LoginPage() {
             {confirmMessage && (
               <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-lg text-sm">
                 Check your email and click the confirmation link, then sign in here.
+              </div>
+            )}
+            {signupCompleteMessage && (
+              <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-lg text-sm">
+                Account created. Sign in below with the same store name, Employee ID, email, and password.
+              </div>
+            )}
+            {!TURNSTILE_SITE_KEY && (
+              <div className="bg-amber-50 border border-amber-200 text-amber-900 px-4 py-3 rounded-lg text-sm">
+                CAPTCHA is enabled on this project. Add <code className="font-mono text-xs">VITE_TURNSTILE_SITE_KEY</code> to{' '}
+                <code className="font-mono text-xs">.env</code> (see <code className="font-mono text-xs">.env.example</code>).
               </div>
             )}
             {error && (
@@ -172,6 +213,13 @@ export function LoginPage() {
               </Link>
             </div>
 
+            {TURNSTILE_SITE_KEY && (
+              <div className="space-y-2">
+                <p className="text-xs text-slate-500 text-center">Verification</p>
+                <AuthTurnstile ref={turnstileRef} onTokenChange={setCaptchaToken} />
+              </div>
+            )}
+
             <button
               type="submit"
               disabled={loading}
@@ -182,10 +230,11 @@ export function LoginPage() {
           </form>
 
           <p className="mt-4 text-center text-sm text-slate-600">
-            Don't have an account?{' '}
+            New employee?{' '}
             <Link to="/signup" className="font-medium text-blue-600 hover:text-blue-500">
-              Sign up
+              Create account
             </Link>
+            {' '}with your Employee ID from your manager.
           </p>
         </div>
       </div>

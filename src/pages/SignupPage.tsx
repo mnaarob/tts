@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Code2, Store, Hash, Mail, Lock } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import type { TurnstileInstance } from '@marsidev/react-turnstile';
+import { AuthTurnstile, TURNSTILE_SITE_KEY } from '../components/AuthTurnstile';
+import { supabase } from '../lib/supabase';
 
 export function SignupPage() {
   const [storeName, setStoreName] = useState('');
@@ -10,60 +12,65 @@ export function SignupPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const { signUp } = useAuth();
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const turnstileRef = useRef<TurnstileInstance | undefined>(undefined);
   const navigate = useNavigate();
+
+  const resetCaptcha = useCallback(() => {
+    setCaptchaToken(null);
+    turnstileRef.current?.reset();
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
+    if (TURNSTILE_SITE_KEY && !captchaToken) {
+      setError('Complete the verification below.');
+      return;
+    }
     setLoading(true);
 
     if (employeeId.trim().length !== 6) {
       setLoading(false);
       setError('Employee ID must be exactly 6 characters.');
+      resetCaptcha();
       return;
     }
 
-    // Store name + employee ID are saved as user metadata;
-    // full validation happens on sign-in via validate_employee_login.
-    const { error: signUpError, session } = await signUp(
-      email,
-      password,
-      storeName.trim() || undefined,
-    );
-    if (signUpError) {
-      setLoading(false);
-      setError(signUpError.message);
-      return;
-    }
+    const normalizedStoreName = storeName.trim().replace(/[\u2018\u2019\u201C\u201D\u0060]/g, "'");
+
+    const { data, error: fnError } = await supabase.functions.invoke<{
+      ok?: boolean;
+      error?: string;
+      message?: string;
+    }>('claim-employee-signup', {
+      body: {
+        store_name: normalizedStoreName,
+        employee_id: employeeId.trim().toUpperCase(),
+        email: email.trim(),
+        password,
+        captchaToken: captchaToken ?? undefined,
+      },
+    });
 
     setLoading(false);
 
-    if (session) {
-      navigate('/inventory', { replace: true });
+    if (fnError) {
+      setError(fnError.message || 'Could not create account. Try again.');
+      resetCaptcha();
       return;
     }
 
-    setSuccess(true);
-    setTimeout(() => navigate('/login', { replace: true, state: { message: 'confirm_email' } }), 3000);
-  }
+    if (data && typeof data === 'object' && data.ok === false) {
+      setError(data.error || 'Could not create account.');
+      resetCaptcha();
+      return;
+    }
 
-  if (success) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="bg-white p-8 rounded-xl border border-slate-200 text-center max-w-md">
-          <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-3xl">✓</span>
-          </div>
-          <h2 className="text-xl font-bold text-slate-900">Account created!</h2>
-          <p className="mt-2 text-slate-600">
-            Check your email for a confirmation link. Once confirmed, you can sign in.
-          </p>
-          <p className="mt-4 text-sm text-slate-500">Redirecting to sign in...</p>
-        </div>
-      </div>
-    );
+    navigate('/login', {
+      replace: true,
+      state: { message: 'signup_complete' },
+    });
   }
 
   return (
@@ -76,18 +83,27 @@ export function SignupPage() {
           <span className="font-bold text-2xl text-slate-900">Tech to Store</span>
         </Link>
         <h2 className="mt-6 text-center text-xl font-bold text-slate-900">Create your account</h2>
+        <p className="mt-2 text-center text-sm text-slate-500 max-w-md mx-auto px-2">
+          Your manager adds you in <strong className="text-slate-700">Team</strong> and shares your{' '}
+          <strong className="text-slate-700">Employee ID</strong>. Enter it below with your store name, then choose your email and password.
+        </p>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-6 shadow rounded-xl border border-slate-200">
           <form className="space-y-5" onSubmit={handleSubmit}>
+            {!TURNSTILE_SITE_KEY && (
+              <div className="bg-amber-50 border border-amber-200 text-amber-900 px-4 py-3 rounded-lg text-sm">
+                CAPTCHA is enabled on this project. Add <code className="font-mono text-xs">VITE_TURNSTILE_SITE_KEY</code> to{' '}
+                <code className="font-mono text-xs">.env</code> (see <code className="font-mono text-xs">.env.example</code>).
+              </div>
+            )}
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
                 {error}
               </div>
             )}
 
-            {/* Store Name */}
             <div>
               <label htmlFor="storeName" className="block text-sm font-medium text-slate-700 mb-1">
                 Store Name
@@ -107,7 +123,6 @@ export function SignupPage() {
               </div>
             </div>
 
-            {/* Employee ID */}
             <div>
               <label htmlFor="employeeId" className="block text-sm font-medium text-slate-700 mb-1">
                 Employee ID
@@ -120,7 +135,7 @@ export function SignupPage() {
                   autoComplete="off"
                   required
                   maxLength={6}
-                  placeholder="6-character ID"
+                  placeholder="6-character ID from your manager"
                   value={employeeId}
                   onChange={(e) => setEmployeeId(e.target.value.toUpperCase())}
                   className="block w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm font-mono tracking-widest uppercase"
@@ -128,7 +143,6 @@ export function SignupPage() {
               </div>
             </div>
 
-            {/* Divider */}
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-slate-200" />
@@ -138,7 +152,6 @@ export function SignupPage() {
               </div>
             </div>
 
-            {/* Email */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1">
                 Email
@@ -157,7 +170,6 @@ export function SignupPage() {
               </div>
             </div>
 
-            {/* Password */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-1">
                 Password
@@ -178,17 +190,26 @@ export function SignupPage() {
               <p className="mt-1 text-xs text-slate-500">At least 6 characters</p>
             </div>
 
+            {TURNSTILE_SITE_KEY && (
+              <div className="space-y-2">
+                <p className="text-xs text-slate-500 text-center">Verification</p>
+                <AuthTurnstile ref={turnstileRef} onTokenChange={setCaptchaToken} />
+              </div>
+            )}
+
             <button
               type="submit"
               disabled={loading}
               className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-emerald-500 hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-50 transition-colors mt-2"
             >
-              {loading ? 'Creating account...' : 'Sign up'}
+              {loading ? 'Creating account...' : 'Create account'}
             </button>
           </form>
           <p className="mt-4 text-center text-sm text-slate-600">
             Already have an account?{' '}
-            <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">Sign in</Link>
+            <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
+              Sign in
+            </Link>
           </p>
         </div>
       </div>

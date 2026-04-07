@@ -25,10 +25,6 @@ export function Header() {
     href: '#features'
   },
   {
-    name: 'Testimonials',
-    href: '#testimonials'
-  },
-  {
     name: 'Pricing',
     href: '#pricing'
   }];
@@ -78,7 +74,7 @@ export function Header() {
                 <Link
                   to="/signup"
                   className="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-all hover:shadow-lg hover:-translate-y-0.5">
-                  Sign up
+                  Create account
                 </Link>
               </>
             )}
@@ -147,7 +143,7 @@ export function Header() {
                     to="/signup"
                     className="bg-emerald-500 text-white px-5 py-3 rounded-lg text-center font-semibold"
                     onClick={() => setIsMobileMenuOpen(false)}>
-                    Sign up
+                    Create account
                   </Link>
                 </>
               )}

@@ -1,36 +1,39 @@
 # Edge Functions
 
-## `invite-employee`
+## `claim-employee-signup`
 
-Sends team invites: verifies the caller is `owner` or `manager` for the store, invites the email via Auth Admin (or links an existing user), then inserts `store_admins`.
+Public **POST** (no JWT). Employees register with store name, Employee ID (from pending `store_invites`), email, and password. Uses the service role to create a confirmed Auth user, insert `store_admins`, and delete the invite row.
 
 ### Deploy
 
-1. Install Node/npm (or [Supabase CLI](https://supabase.com/docs/guides/cli) globally).
-2. Log in once (opens browser): `npx supabase login`
-3. From the repo root (with `VITE_SUPABASE_URL` in `.env`):
-   ```bash
-   npm run deploy:functions
-   ```
-   This runs `supabase functions deploy invite-employee --project-ref <parsed from .env>` — **no database password or `supabase link` required**.
-
-Alternatively:
-```bash
-npx supabase functions deploy invite-employee --project-ref YOUR_PROJECT_REF
-```
-
-### Secrets (optional)
-
-- **`INVITE_REDIRECT_URL`** — Where users land after accepting the invite (e.g. `https://techtostore.com/#/login`). Add the same URL under **Authentication → URL configuration → Redirect URLs** in the Supabase dashboard.
-
-Auto-provided by Supabase (do not commit): `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`.
-
-Set optional secret:
+From the repo root (with `VITE_SUPABASE_URL` in `.env`):
 
 ```bash
-supabase secrets set INVITE_REDIRECT_URL=https://your-domain.com/#/login
+npm run deploy:functions
 ```
 
-### Verify
+Or:
 
-In the dashboard: **Edge Functions** → `invite-employee` should appear after deploy. If the app still errors, confirm `VITE_SUPABASE_URL` in Vercel matches this project.
+```bash
+npx supabase functions deploy claim-employee-signup --project-ref YOUR_PROJECT_REF
+```
+
+### Database
+
+Run migrations through **007** and **`008_invites_no_email.sql`** in the SQL Editor (`store_invites` + RLS + unique `(store_id, employee_id)`).
+
+### Secrets
+
+Auto-provided: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`.
+
+**`TURNSTILE_SECRET_KEY`** (optional but recommended for production): same secret as in Supabase Auth → CAPTCHA / Cloudflare Turnstile. When set, the function verifies the `captchaToken` from the client with Cloudflare’s siteverify API.
+
+```bash
+supabase secrets set TURNSTILE_SECRET_KEY=your_secret --project-ref YOUR_PROJECT_REF
+```
+
+Without `TURNSTILE_SECRET_KEY`, CAPTCHA is not verified server-side (development only).
+
+### Team flow
+
+Managers add an employee in **Inventory → Team** (generates Employee ID + `store_invites` row). The employee signs up at **`/#/signup`** with store name, ID, email, and password.

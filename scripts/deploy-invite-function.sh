@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# Deploy invite-employee Edge Function (no DB password needed — only Supabase account login).
+# Deploy claim-employee-signup (Supabase account login only).
 #
 # One-time: npx supabase login
+# Set secret (Turnstile server verify): supabase secrets set TURNSTILE_SECRET_KEY=... --project-ref "$REF"
 # Then:     bash scripts/deploy-invite-function.sh
 # Or:       npm run deploy:functions
 
@@ -38,7 +39,7 @@ if ! npx supabase projects list >/dev/null 2>&1; then
   exit 1
 fi
 
-echo "Deploying invite-employee..."
-npx supabase functions deploy invite-employee --project-ref "$REF"
+echo "Deploying claim-employee-signup..."
+npx supabase functions deploy claim-employee-signup --project-ref "$REF"
 echo ""
-echo "Done. Dashboard → Edge Functions → invite-employee"
+echo "Done. Dashboard → Edge Functions → claim-employee-signup"

@@ -20,7 +20,6 @@ import {
   Scan,
   Menu,
   X,
-  Mail,
   ChevronDown,
   UserPlus,
   Trash2,
@@ -97,6 +96,15 @@ type TeamMember = {
   joined_at: string;
 };
 
+type StoreInviteRow = {
+  id: string;
+  store_id: string;
+  email: string | null;
+  role: string;
+  employee_id: string;
+  created_at: string;
+};
+
 const ROLE_BADGE: Record<string, string> = {
   owner:     'bg-indigo-100 text-indigo-700',
   manager:   'bg-blue-100 text-blue-700',
@@ -136,12 +144,14 @@ export function InventoryDashboard() {
   const [teamLoading, setTeamLoading] = useState(false);
   const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
   const [removeLoading, setRemoveLoading] = useState(false);
-  const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState<'manager' | 'staff'>('staff');
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteSuccess, setInviteSuccess] = useState<{ message: string; employeeId: string } | null>(null);
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState(false);
+  const [pendingInvites, setPendingInvites] = useState<StoreInviteRow[]>([]);
+  const [pendingInvitesLoading, setPendingInvitesLoading] = useState(false);
+  const [revokeInviteLoadingId, setRevokeInviteLoadingId] = useState<string | null>(null);
   // canSeeTeam: any authenticated store member can view the team list
   const canSeeTeam = !!claims?.store_id;
   // canManageTeam: only owner/manager can invite or remove members
@@ -186,9 +196,29 @@ export function InventoryDashboard() {
     setTeamLoading(false);
   }, [claims?.store_id]);
 
+  const fetchPendingInvites = useCallback(async () => {
+    if (!claims?.store_id || !canManageTeam) return;
+    setPendingInvitesLoading(true);
+    const { data, error } = await supabase
+      .from('store_invites')
+      .select('id, store_id, email, role, employee_id, created_at')
+      .eq('store_id', claims.store_id)
+      .order('created_at', { ascending: false });
+    if (error) {
+      console.error('store_invites', error);
+      setPendingInvites([]);
+    } else {
+      setPendingInvites((data as StoreInviteRow[]) || []);
+    }
+    setPendingInvitesLoading(false);
+  }, [claims?.store_id, canManageTeam]);
+
   useEffect(() => {
-    if (activeTab === 'Team' && claims?.store_id) fetchTeam();
-  }, [activeTab, fetchTeam, claims?.store_id]);
+    if (activeTab === 'Team' && claims?.store_id) {
+      fetchTeam();
+      if (canManageTeam) fetchPendingInvites();
+    }
+  }, [activeTab, fetchTeam, fetchPendingInvites, claims?.store_id, canManageTeam]);
 
   async function handleTeamInvite(e: React.FormEvent) {
     e.preventDefault();
@@ -197,7 +227,15 @@ export function InventoryDashboard() {
     setInviteSuccess(null);
     setInviteError(null);
 
-    // Generate a unique employee ID
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user?.id) {
+      setInviteError('Not signed in.');
+      setInviteLoading(false);
+      return;
+    }
+
     const { data: generatedId, error: genError } = await supabase.rpc('generate_employee_id', {
       p_store_id: claims.store_id,
     });
@@ -207,41 +245,37 @@ export function InventoryDashboard() {
       return;
     }
 
-    const { data: inviteData, error: inviteFnError } = await supabase.functions.invoke<{
-      ok?: boolean;
-      error?: string;
-      message?: string;
-    }>('invite-employee', {
-      body: {
-        store_id: claims.store_id,
-        email: inviteEmail.trim(),
-        role: inviteRole,
-        employee_id: generatedId,
-      },
+    const { error: insErr } = await supabase.from('store_invites').insert({
+      store_id: claims.store_id,
+      email: '',
+      role: inviteRole,
+      employee_id: generatedId as string,
+      invited_by: user.id,
     });
 
-    if (inviteFnError) {
-      const msg = inviteFnError.message || '';
-      const hint =
-        /not\s*found|404|failed to send/i.test(msg) || msg.includes('Edge Function')
-          ? ' The invite function may not be deployed. Run: supabase functions deploy invite-employee'
-          : '';
-      setInviteError(`${msg}${hint}`);
+    if (insErr) {
+      setInviteError(insErr.message || 'Could not add pending employee.');
       setInviteLoading(false);
       return;
     }
 
-    if (inviteData && typeof inviteData === 'object' && inviteData.ok === false) {
-      setInviteError(inviteData.error || 'Invite failed.');
-      setInviteLoading(false);
-      return;
-    }
-
-    setInviteSuccess({ message: `Invite sent to ${inviteEmail}`, employeeId: generatedId as string });
-    setInviteEmail('');
+    setInviteSuccess({
+      message: 'Employee ID created.',
+      employeeId: generatedId as string,
+    });
     setInviteRole('staff');
     setInviteLoading(false);
     fetchTeam();
+    fetchPendingInvites();
+  }
+
+  async function handleRevokeInvite(inviteId: string) {
+    if (!canManageTeam) return;
+    setRevokeInviteLoadingId(inviteId);
+    const { error } = await supabase.from('store_invites').delete().eq('id', inviteId);
+    if (error) console.error('revoke invite', error);
+    setRevokeInviteLoadingId(null);
+    fetchPendingInvites();
   }
 
   async function handleRemoveMember(userId: string) {
@@ -1037,30 +1071,24 @@ export function InventoryDashboard() {
                 </p>
               </div>
 
-              {/* Invite form */}
+              {/* Add employee — generates Employee ID; they sign up at /signup */}
               {canManageTeam && (
                 <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5 sm:p-6 mb-6">
                   <h2 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
                     <UserPlus className="w-5 h-5 text-slate-500" />
-                    Invite a team member
+                    Add a team member
                   </h2>
-                  <form onSubmit={handleTeamInvite} className="flex flex-col sm:flex-row gap-3">
-                    <div className="relative flex-1">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                      <input
-                        type="email"
-                        required
-                        placeholder="colleague@example.com"
-                        value={inviteEmail}
-                        onChange={(e) => setInviteEmail(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2.5 min-h-[44px] border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-slate-50/50"
-                      />
-                    </div>
+                  <p className="text-sm text-slate-600 mb-4">
+                    Creates an Employee ID to share in person. They create their account at{' '}
+                    <span className="font-mono text-xs bg-slate-100 px-1.5 py-0.5 rounded">techtostore.com/#/signup</span>{' '}
+                    with store name, this ID, and their own email and password.
+                  </p>
+                  <form onSubmit={handleTeamInvite} className="flex flex-col sm:flex-row gap-3 sm:items-center">
                     <div className="relative">
                       <select
                         value={inviteRole}
                         onChange={(e) => setInviteRole(e.target.value as 'manager' | 'staff')}
-                        className="appearance-none w-full sm:w-36 px-4 pr-9 py-2.5 min-h-[44px] border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-slate-50/50"
+                        className="appearance-none w-full sm:w-40 px-4 pr-9 py-2.5 min-h-[44px] border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-slate-50/50"
                       >
                         <option value="manager">Manager</option>
                         <option value="staff">Staff</option>
@@ -1072,7 +1100,7 @@ export function InventoryDashboard() {
                       disabled={inviteLoading}
                       className="flex items-center justify-center gap-2 px-5 py-2.5 min-h-[44px] bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl text-sm font-medium transition-colors disabled:opacity-50 shadow-sm"
                     >
-                      {inviteLoading ? 'Sending…' : 'Send Invite'}
+                      {inviteLoading ? 'Creating…' : 'Generate Employee ID'}
                     </button>
                   </form>
 
@@ -1086,7 +1114,8 @@ export function InventoryDashboard() {
                           <span className="font-mono font-bold tracking-widest text-emerald-800">
                             {inviteSuccess.employeeId}
                           </span>
-                          {' '}— share it with them so they can log in.
+                          {' '}— share it with them. They sign up at{' '}
+                          <strong>techtostore.com/#/signup</strong> using your store name and this ID.
                         </p>
                       </div>
                       <button
@@ -1103,6 +1132,63 @@ export function InventoryDashboard() {
                       <AlertCircle className="w-4 h-4 flex-shrink-0" />
                       {inviteError}
                     </div>
+                  )}
+                </div>
+              )}
+
+              {canManageTeam && (
+                <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden mb-6">
+                  <div className="px-5 sm:px-6 py-4 border-b border-slate-200/80">
+                    <h2 className="font-semibold text-slate-900">
+                      Pending invitations
+                      {pendingInvites.length > 0 && (
+                        <span className="ml-2 px-2 py-0.5 bg-amber-100 text-amber-800 text-xs rounded-full font-normal">
+                          {pendingInvites.length}
+                        </span>
+                      )}
+                    </h2>
+                    <p className="text-sm text-slate-500 mt-1">
+                      Waiting for them to sign up at techtostore.com/#/signup. Revoke if you no longer need this slot.
+                    </p>
+                  </div>
+                  {pendingInvitesLoading ? (
+                    <div className="flex items-center justify-center py-10">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+                    </div>
+                  ) : pendingInvites.length === 0 ? (
+                    <div className="py-8 text-center text-slate-500 text-sm">No pending invites.</div>
+                  ) : (
+                    <ul className="divide-y divide-slate-100">
+                      {pendingInvites.map((inv) => (
+                        <li
+                          key={inv.id}
+                          className="px-5 sm:px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+                        >
+                          <div className="min-w-0">
+                            <p className="font-medium text-slate-900 truncate">
+                              {inv.email?.trim() ? inv.email : 'Pending signup'}
+                            </p>
+                            <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-slate-500">
+                              <span className={`inline-flex px-2 py-0.5 rounded-full font-medium ${roleBadge(inv.role)}`}>
+                                {roleLabel(inv.role)}
+                              </span>
+                              <span className="font-mono font-semibold text-slate-700 tracking-widest">
+                                {inv.employee_id}
+                              </span>
+                              <span>Sent {new Date(inv.created_at).toLocaleString()}</span>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleRevokeInvite(inv.id)}
+                            disabled={revokeInviteLoadingId === inv.id}
+                            className="self-start sm:self-center px-4 py-2 text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 rounded-xl border border-red-200 disabled:opacity-50 transition-colors"
+                          >
+                            {revokeInviteLoadingId === inv.id ? 'Revoking…' : 'Revoke'}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
                   )}
                 </div>
               )}
