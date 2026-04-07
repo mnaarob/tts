@@ -119,7 +119,7 @@ serve(async (req) => {
 
     const { data: invite, error: invErr } = await admin
       .from('store_invites')
-      .select('id, role, employee_id')
+      .select('id, role, employee_id, email, full_name')
       .eq('store_id', store.id)
       .eq('employee_id', empUpper)
       .maybeSingle();
@@ -134,10 +134,28 @@ serve(async (req) => {
       );
     }
 
+    const inviteEmail = typeof invite.email === 'string' ? invite.email.trim().toLowerCase() : '';
+    if (!inviteEmail) {
+      return errResponse(
+        'This invite is outdated. Ask your manager to remove it and add you again with your name and email in Team.',
+      );
+    }
+    if (inviteEmail !== normalizedEmail) {
+      return errResponse(
+        'This Employee ID is assigned to a different email address. Use the exact email your manager entered.',
+      );
+    }
+
+    const displayName =
+      typeof invite.full_name === 'string' && invite.full_name.trim() !== ''
+        ? invite.full_name.trim()
+        : undefined;
+
     const { data: created, error: createErr } = await admin.auth.admin.createUser({
       email: normalizedEmail,
       password,
       email_confirm: true,
+      user_metadata: displayName ? { full_name: displayName } : undefined,
     });
 
     if (createErr || !created?.user?.id) {
@@ -156,6 +174,7 @@ serve(async (req) => {
       user_id: userId,
       role: invite.role,
       employee_id: empUpper,
+      ...(displayName ? { display_name: displayName } : {}),
     });
 
     if (saErr) {

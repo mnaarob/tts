@@ -84,8 +84,8 @@ export function SignupPage() {
         </Link>
         <h2 className="mt-6 text-center text-xl font-bold text-slate-900">Create your account</h2>
         <p className="mt-2 text-center text-sm text-slate-500 max-w-md mx-auto px-2">
-          Your manager adds you in <strong className="text-slate-700">Team</strong> and shares your{' '}
-          <strong className="text-slate-700">Employee ID</strong>. Enter it below with your store name, then choose your email and password.
+          Your manager adds you in <strong className="text-slate-700">Team</strong> with your name and email, then shares your{' '}
+          <strong className="text-slate-700">Employee ID</strong>. Use the <strong className="text-slate-700">same email</strong> your manager entered, plus your store name, ID, and a new password.
         </p>
       </div>
 
@@ -168,6 +168,9 @@ export function SignupPage() {
                   className="block w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                 />
               </div>
+              <p className="mt-1 text-xs text-slate-500">
+                Must match the email your manager entered when they added you—otherwise signup will fail.
+              </p>
             </div>
 
             <div>

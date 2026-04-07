@@ -21,6 +21,8 @@ import {
   Menu,
   X,
   ChevronDown,
+  User,
+  Mail,
   UserPlus,
   Trash2,
   CheckCircle,
@@ -100,6 +102,7 @@ type StoreInviteRow = {
   id: string;
   store_id: string;
   email: string | null;
+  full_name: string | null;
   role: string;
   employee_id: string;
   created_at: string;
@@ -144,6 +147,8 @@ export function InventoryDashboard() {
   const [teamLoading, setTeamLoading] = useState(false);
   const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
   const [removeLoading, setRemoveLoading] = useState(false);
+  const [inviteName, setInviteName] = useState('');
+  const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState<'manager' | 'staff'>('staff');
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteSuccess, setInviteSuccess] = useState<{ message: string; employeeId: string } | null>(null);
@@ -201,7 +206,7 @@ export function InventoryDashboard() {
     setPendingInvitesLoading(true);
     const { data, error } = await supabase
       .from('store_invites')
-      .select('id, store_id, email, role, employee_id, created_at')
+      .select('id, store_id, email, full_name, role, employee_id, created_at')
       .eq('store_id', claims.store_id)
       .order('created_at', { ascending: false });
     if (error) {
@@ -236,6 +241,19 @@ export function InventoryDashboard() {
       return;
     }
 
+    const nameTrim = inviteName.trim();
+    const emailTrim = inviteEmail.trim();
+    if (!nameTrim) {
+      setInviteError('Enter the employee\'s name.');
+      setInviteLoading(false);
+      return;
+    }
+    if (!emailTrim || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrim)) {
+      setInviteError('Enter a valid email address for this employee.');
+      setInviteLoading(false);
+      return;
+    }
+
     const { data: generatedId, error: genError } = await supabase.rpc('generate_employee_id', {
       p_store_id: claims.store_id,
     });
@@ -247,7 +265,8 @@ export function InventoryDashboard() {
 
     const { error: insErr } = await supabase.from('store_invites').insert({
       store_id: claims.store_id,
-      email: '',
+      email: emailTrim.toLowerCase(),
+      full_name: nameTrim,
       role: inviteRole,
       employee_id: generatedId as string,
       invited_by: user.id,
@@ -263,6 +282,8 @@ export function InventoryDashboard() {
       message: 'Employee ID created.',
       employeeId: generatedId as string,
     });
+    setInviteName('');
+    setInviteEmail('');
     setInviteRole('staff');
     setInviteLoading(false);
     fetchTeam();
@@ -1079,29 +1100,57 @@ export function InventoryDashboard() {
                     Add a team member
                   </h2>
                   <p className="text-sm text-slate-600 mb-4">
-                    Creates an Employee ID to share in person. They create their account at{' '}
+                    Enter their name and email, then generate an Employee ID. They create their account at{' '}
                     <span className="font-mono text-xs bg-slate-100 px-1.5 py-0.5 rounded">techtostore.com/#/signup</span>{' '}
-                    with store name, this ID, and their own email and password.
+                    using your store name, this ID, the <strong>same email you entered below</strong>, and their password.
                   </p>
-                  <form onSubmit={handleTeamInvite} className="flex flex-col sm:flex-row gap-3 sm:items-center">
-                    <div className="relative">
-                      <select
-                        value={inviteRole}
-                        onChange={(e) => setInviteRole(e.target.value as 'manager' | 'staff')}
-                        className="appearance-none w-full sm:w-40 px-4 pr-9 py-2.5 min-h-[44px] border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-slate-50/50"
-                      >
-                        <option value="manager">Manager</option>
-                        <option value="staff">Staff</option>
-                      </select>
-                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                  <form onSubmit={handleTeamInvite} className="flex flex-col gap-3">
+                    <div className="grid sm:grid-cols-2 gap-3">
+                      <div className="relative">
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                        <input
+                          type="text"
+                          required
+                          autoComplete="off"
+                          placeholder="Employee name"
+                          value={inviteName}
+                          onChange={(e) => setInviteName(e.target.value)}
+                          className="w-full pl-10 pr-4 py-2.5 min-h-[44px] border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-slate-50/50"
+                        />
+                      </div>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                        <input
+                          type="email"
+                          required
+                          autoComplete="off"
+                          placeholder="Employee email"
+                          value={inviteEmail}
+                          onChange={(e) => setInviteEmail(e.target.value)}
+                          className="w-full pl-10 pr-4 py-2.5 min-h-[44px] border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-slate-50/50"
+                        />
+                      </div>
                     </div>
-                    <button
-                      type="submit"
-                      disabled={inviteLoading}
-                      className="flex items-center justify-center gap-2 px-5 py-2.5 min-h-[44px] bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl text-sm font-medium transition-colors disabled:opacity-50 shadow-sm"
-                    >
-                      {inviteLoading ? 'Creating…' : 'Generate Employee ID'}
-                    </button>
+                    <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+                      <div className="relative">
+                        <select
+                          value={inviteRole}
+                          onChange={(e) => setInviteRole(e.target.value as 'manager' | 'staff')}
+                          className="appearance-none w-full sm:w-40 px-4 pr-9 py-2.5 min-h-[44px] border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-slate-50/50"
+                        >
+                          <option value="manager">Manager</option>
+                          <option value="staff">Staff</option>
+                        </select>
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                      </div>
+                      <button
+                        type="submit"
+                        disabled={inviteLoading}
+                        className="flex items-center justify-center gap-2 px-5 py-2.5 min-h-[44px] bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl text-sm font-medium transition-colors disabled:opacity-50 shadow-sm"
+                      >
+                        {inviteLoading ? 'Creating…' : 'Generate Employee ID'}
+                      </button>
+                    </div>
                   </form>
 
                   {inviteSuccess && (
@@ -1114,8 +1163,8 @@ export function InventoryDashboard() {
                           <span className="font-mono font-bold tracking-widest text-emerald-800">
                             {inviteSuccess.employeeId}
                           </span>
-                          {' '}— share it with them. They sign up at{' '}
-                          <strong>techtostore.com/#/signup</strong> using your store name and this ID.
+                          . Share the ID with them—they must sign up with the <strong>exact email</strong> you entered, at{' '}
+                          <strong>techtostore.com/#/signup</strong>.
                         </p>
                       </div>
                       <button
@@ -1148,7 +1197,7 @@ export function InventoryDashboard() {
                       )}
                     </h2>
                     <p className="text-sm text-slate-500 mt-1">
-                      Waiting for them to sign up at techtostore.com/#/signup. Revoke if you no longer need this slot.
+                      Waiting for them to sign up with the assigned email. Revoke if you no longer need this slot.
                     </p>
                   </div>
                   {pendingInvitesLoading ? (
@@ -1166,7 +1215,10 @@ export function InventoryDashboard() {
                         >
                           <div className="min-w-0">
                             <p className="font-medium text-slate-900 truncate">
-                              {inv.email?.trim() ? inv.email : 'Pending signup'}
+                              {inv.full_name?.trim() || 'Pending'}
+                            </p>
+                            <p className="text-sm text-slate-500 truncate mt-0.5">
+                              {inv.email?.trim() || '—'}
                             </p>
                             <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-slate-500">
                               <span className={`inline-flex px-2 py-0.5 rounded-full font-medium ${roleBadge(inv.role)}`}>
@@ -1221,7 +1273,9 @@ export function InventoryDashboard() {
                           <th className="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Name</th>
                           <th className="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Email</th>
                           <th className="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Role</th>
-                          <th className="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Employee ID</th>
+                          {canManageTeam && (
+                            <th className="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Employee ID</th>
+                          )}
                           <th className="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Joined</th>
                           {canManageTeam && (
                             <th className="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
@@ -1240,11 +1294,13 @@ export function InventoryDashboard() {
                                   {roleLabel(m.role)}
                                 </span>
                               </td>
-                              <td className="px-6 py-4">
-                                <span className="font-mono text-sm font-semibold text-slate-800 tracking-widest">
-                                  {m.employee_id ?? '—'}
-                                </span>
-                              </td>
+                              {canManageTeam && (
+                                <td className="px-6 py-4">
+                                  <span className="font-mono text-sm font-semibold text-slate-800 tracking-widest">
+                                    {m.employee_id ?? '—'}
+                                  </span>
+                                </td>
+                              )}
                               <td className="px-6 py-4 text-slate-500 text-sm">
                                 {new Date(m.joined_at).toLocaleDateString()}
                               </td>
@@ -1309,7 +1365,7 @@ export function InventoryDashboard() {
                                 <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${roleBadge(m.role)}`}>
                                   {roleLabel(m.role)}
                                 </span>
-                                {m.employee_id && (
+                                {canManageTeam && m.employee_id && (
                                   <span className="font-mono text-xs font-bold text-slate-700 tracking-widest bg-slate-100 px-2 py-1 rounded-lg">
                                     {m.employee_id}
                                   </span>

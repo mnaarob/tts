@@ -20,7 +20,7 @@ npx supabase functions deploy claim-employee-signup --project-ref YOUR_PROJECT_R
 
 ### Database
 
-Run migrations through **007** and **`008_invites_no_email.sql`** in the SQL Editor (`store_invites` + RLS + unique `(store_id, employee_id)`).
+Run migrations through **`008_invites_no_email.sql`** and **`009_team_invite_name_email.sql`** in the SQL Editor (`store_invites.full_name`, `store_admins.display_name`, email-bound invites, updated `get_store_team`).
 
 ### Secrets
 
