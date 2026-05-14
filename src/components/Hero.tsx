@@ -23,9 +23,11 @@ export function Hero() {
               duration: 0.5
             }}>
 
-            <span className="inline-block py-1 px-3 rounded-full bg-blue-100 text-blue-800 text-sm font-semibold mb-6">
-              Trusted by Canadian Businesses 🇨🇦
-            </span>
+            <div className="inline-flex items-center gap-2 py-1.5 px-4 rounded-full bg-white border border-slate-200 shadow-sm text-sm font-medium text-slate-600 mb-6">
+              <span className="w-2 h-2 rounded-full bg-red-500 shrink-0" />
+              Trusted by Canadian Businesses
+              <span className="text-base leading-none">🇨🇦</span>
+            </div>
             <h1 className="text-4xl md:text-6xl font-bold text-slate-900 tracking-tight mb-6 leading-tight">
               Empower Your Canadian Business with{' '}
               <span className="text-blue-900">Tech to Store</span>
@@ -36,19 +38,21 @@ export function Hero() {
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-              <a
-                href="#contact"
-                className="w-full sm:w-auto px-8 py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-semibold text-lg transition-all hover:shadow-lg hover:-translate-y-1 flex items-center justify-center gap-2">
+              <button
+                type="button"
+                onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
+                className="w-full sm:w-auto px-8 py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-semibold text-lg transition-all hover:shadow-lg hover:-translate-y-1 flex items-center justify-center gap-2 cursor-pointer border-none">
 
                 Schedule a Demo
                 <ArrowRight className="w-5 h-5" />
-              </a>
-              <a
-                href="#pricing"
-                className="w-full sm:w-auto px-8 py-4 bg-white border border-slate-200 hover:border-blue-200 hover:bg-blue-50 text-slate-700 rounded-xl font-semibold text-lg transition-all hover:-translate-y-1">
+              </button>
+              <button
+                type="button"
+                onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
+                className="w-full sm:w-auto px-8 py-4 bg-white border border-slate-200 hover:border-blue-200 hover:bg-blue-50 text-slate-700 rounded-xl font-semibold text-lg transition-all hover:-translate-y-1 cursor-pointer">
 
                 View Pricing
-              </a>
+              </button>
             </div>
           </motion.div>
 
@@ -70,7 +74,7 @@ export function Hero() {
 
             <div className="flex items-center justify-center gap-3 text-slate-600">
               <ShieldCheck className="w-6 h-6 text-blue-900" />
-              <span className="font-medium">500+ Canadian Businesses</span>
+              <span className="font-medium">100% Canadian Businesses</span>
             </div>
             <div className="flex items-center justify-center gap-3 text-slate-600">
               <CheckCircle2 className="w-6 h-6 text-emerald-500" />
