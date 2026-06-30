@@ -24,7 +24,7 @@ const services = [
   'Future-ready tools to scale your operations. Track stock, manage suppliers, and automate reordering in one place.',
   icon: PackageSearch,
   color: 'bg-purple-100 text-purple-700',
-  status: 'Coming Soon'
+  status: 'Available Now'
 }];
 
 export function Services() {
