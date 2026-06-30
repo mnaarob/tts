@@ -1,14 +1,20 @@
 #!/usr/bin/env bash
 # Deploy claim-employee-signup (Supabase account login only).
 #
-# One-time: npx supabase login
-# Set secret (Turnstile server verify): supabase secrets set TURNSTILE_SECRET_KEY=... --project-ref "$REF"
+# One-time: supabase login
+# Set secret (Turnstile server verify): npm run setup:secrets  (or scripts/setup-supabase-secrets.sh)
 # Then:     bash scripts/deploy-invite-function.sh
 # Or:       npm run deploy:functions
 
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
+
+if command -v supabase >/dev/null 2>&1; then
+  SUPABASE=(supabase)
+else
+  SUPABASE=(npx supabase)
+fi
 
 if [ -f .env ]; then
   set -a
@@ -32,14 +38,14 @@ fi
 echo "Project ref (from .env): $REF"
 echo ""
 
-if ! npx supabase projects list >/dev/null 2>&1; then
-  echo "Not logged in. Run once:"
-  echo "  npx supabase login"
+if ! "${SUPABASE[@]}" projects list >/dev/null 2>&1; then
+  echo "Not logged in to Supabase CLI. Run once:"
+  echo "  supabase login"
   echo ""
   exit 1
 fi
 
 echo "Deploying claim-employee-signup..."
-npx supabase functions deploy claim-employee-signup --project-ref "$REF"
+"${SUPABASE[@]}" functions deploy claim-employee-signup --project-ref "$REF"
 echo ""
 echo "Done. Dashboard → Edge Functions → claim-employee-signup"
