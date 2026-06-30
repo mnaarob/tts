@@ -1,5 +1,5 @@
 import React from 'react';
-import { Code2 } from 'lucide-react';
+import { Logo } from './Logo';
 export function Footer() {
   return (
     <footer className="bg-slate-900 text-slate-300 py-16 border-t border-slate-800">
@@ -7,9 +7,7 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
           <div className="col-span-1 md:col-span-1">
             <div className="flex items-center gap-2 mb-6">
-              <div className="bg-blue-800 p-1.5 rounded-lg">
-                <Code2 className="w-6 h-6 text-white" />
-              </div>
+              <Logo className="w-9 h-9 text-white" letterColor="#0f172a" />
               <span className="font-bold text-xl text-white tracking-tight">
                 Tech to Store
               </span>

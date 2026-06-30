@@ -2,7 +2,7 @@
 
 ## `claim-employee-signup`
 
-Public **POST** (no JWT). Employees register with store name, Employee ID (from pending `store_invites`), email, and password. Uses the service role to create a confirmed Auth user, insert `store_admins`, and delete the invite row.
+Public **POST** (no JWT). Employees register with store name, Employee ID (from pending `store_invites`), email, and password. Uses the service role to create a confirmed Auth user (or link an existing user by email after invite validation), insert `store_admins`, and delete the invite row.
 
 ### Deploy
 

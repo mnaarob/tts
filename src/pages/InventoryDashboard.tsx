@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -11,7 +11,6 @@ import {
   Search,
   AlertTriangle,
   LogOut,
-  Code2,
   ChevronRight,
   PackagePlus,
   ArrowDownCircle,
@@ -33,11 +32,16 @@ import {
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useOrganization } from '../hooks/useOrganization';
-import { useBarcodeLookup } from '../hooks/useBarcodeLookup';
+import { useBarcodeLookup, lookupProductFromApi } from '../hooks/useBarcodeLookup';
+import { sanitizeBarcode } from '../lib/sanitize';
+import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 import { useJwtClaims } from '../hooks/useJwtClaims';
 import { BarcodeScannerModal } from '../components/BarcodeScannerModal';
 import { AddProductModal } from '../components/AddProductModal';
 import { MfaBanner } from '../components/MfaBanner';
+import { ScannedProductCard, type ScannedProductInfo } from '../components/ScannedProductCard';
+import { Logo } from '../components/Logo';
+import { parseIsPublished } from '../lib/isPublished';
 
 type Product = {
   id: string;
@@ -54,6 +58,17 @@ type Product = {
   best_before_date?: string | null;
   expiry_warning_days?: number | null;
 };
+
+/** Explicit columns so `is_published` is always returned; list + edit use the same shape. */
+const PRODUCT_SELECT =
+  'id, organization_id, category_id, name, sku, barcode, price, quantity, low_stock_threshold, image_url, is_published, best_before_date, expiry_warning_days, created_at, updated_at, categories(name)';
+
+function normalizeProductRow(row: Record<string, unknown>): Product {
+  return {
+    ...(row as unknown as Product),
+    is_published: parseIsPublished(row.is_published),
+  };
+}
 
 type Category = {
   id: string;
@@ -124,23 +139,59 @@ export function InventoryDashboard() {
   const [activeTab, setActiveTab] = useState(() => {
     return localStorage.getItem('tts_active_tab') || 'Dashboard';
   });
-  const changeTab = (tab: string) => {
-    setActiveTab(tab);
-    localStorage.setItem('tts_active_tab', tab);
-  };
+
   const { signOut } = useAuth();
   const { organization, loading: orgLoading } = useOrganization();
-  const { lookup } = useBarcodeLookup(organization?.id || '');
+  const { checkExisting: checkExistingBarcode } = useBarcodeLookup(organization?.id || '');
   const claims = useJwtClaims();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [stockMovements, setStockMovements] = useState<StockMovement[]>([]);
   const [loading, setLoading] = useState(true);
   const [scannerOpen, setScannerOpen] = useState(false);
+  /**
+   * Scanner mode:
+   * - 'add'    → original "Scan to add" flow (jumps straight to Add Product modal).
+   * - 'lookup' → triggered from search bars; shows a Scanned Product card preview.
+   */
+  const [scannerMode, setScannerMode] = useState<'add' | 'lookup'>('add');
+  const [scannedCard, setScannedCard] = useState<{
+    product: ScannedProductInfo;
+    inInventory: boolean;
+    barcode: string;
+    productId?: string;
+  } | null>(null);
+  const [scanLookupError, setScanLookupError] = useState<string | null>(null);
+  const [scanLookupLoading, setScanLookupLoading] = useState(false);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [addModalPrefilled, setAddModalPrefilled] = useState<{ barcode: string; name: string; brand?: string; imageUrl?: string; categories?: string } | null>(null);
+  /** True while the OpenFoodFacts lookup for the just-opened modal is in flight. */
+  const [addModalLookupLoading, setAddModalLookupLoading] = useState(false);
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  /** Products tab: filter by category (null = all). Set from category cards "View products". */
+  const [productCategoryFilterId, setProductCategoryFilterId] = useState<string | null>(null);
+  const [productSearchQuery, setProductSearchQuery] = useState('');
+  const [dashboardSearchQuery, setDashboardSearchQuery] = useState('');
+  const [categoryModal, setCategoryModal] = useState<{ id: string | null; name: string } | null>(null);
+  const [categorySaving, setCategorySaving] = useState(false);
+  const [categoryModalError, setCategoryModalError] = useState<string | null>(null);
+  const [categoryToDelete, setCategoryToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [categoryDeleting, setCategoryDeleting] = useState(false);
+  const [categoryDeleteError, setCategoryDeleteError] = useState<string | null>(null);
+
+  // Lock background scroll while the category modal is open. Other modals
+  // (AddProductModal, BarcodeScannerModal, ScannedProductCard) lock their
+  // own scroll internally — the hook is reference-counted so nesting is safe.
+  useBodyScrollLock(!!categoryModal || !!categoryToDelete);
+
+  const changeTab = useCallback((tab: string) => {
+    setActiveTab(tab);
+    localStorage.setItem('tts_active_tab', tab);
+    if (tab !== 'Products') {
+      setProductCategoryFilterId(null);
+    }
+  }, []);
 
   // Team tab state
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
@@ -161,6 +212,71 @@ export function InventoryDashboard() {
   const canSeeTeam = !!claims?.store_id;
   // canManageTeam: only owner/manager can invite or remove members
   const canManageTeam = claims?.store_role === 'owner' || claims?.store_role === 'manager';
+  // canManageCatalog: owner/manager — website publish toggle, delete product
+  const canManageCatalog = claims?.store_role === 'owner' || claims?.store_role === 'manager';
+
+  /** Prefer live list row over `editProduct` (click snapshot) so `is_published` stays accurate. */
+  const editRowForModal = useMemo(() => {
+    if (!editProduct) return null;
+    return products.find((p) => p.id === editProduct.id) ?? editProduct;
+  }, [editProduct, products]);
+
+  /** Primitives-only deps avoid new objects every `products` refetch when values are unchanged. */
+  const addModalInitialData = useMemo(() => {
+    if (!editRowForModal) return undefined;
+    const row = editRowForModal;
+    return {
+      id: row.id,
+      name: row.name,
+      sku: row.sku ?? '',
+      barcode: row.barcode ?? '',
+      price: row.price,
+      quantity: row.quantity,
+      category_id: row.category_id,
+      image_url: row.image_url ?? '',
+      is_published: parseIsPublished(row.is_published),
+      best_before_date: row.best_before_date ?? '',
+      expiry_warning_days: row.expiry_warning_days ?? 7,
+    };
+  }, [
+    editRowForModal?.id,
+    editRowForModal?.name,
+    editRowForModal?.sku,
+    editRowForModal?.barcode,
+    editRowForModal?.price,
+    editRowForModal?.quantity,
+    editRowForModal?.category_id,
+    editRowForModal?.image_url,
+    editRowForModal?.is_published,
+    editRowForModal?.best_before_date,
+    editRowForModal?.expiry_warning_days,
+  ]);
+
+  /** Opens modal immediately, then loads authoritative row from DB (fixes stale `is_published`). */
+  const openProductForEdit = useCallback(
+    async (product: Product) => {
+      setAddModalPrefilled(null);
+      setEditProduct(product);
+      setAddModalOpen(true);
+      if (!organization?.id) return;
+      const { data, error } = await supabase
+        .from('products')
+        .select(PRODUCT_SELECT)
+        .eq('id', product.id)
+        .eq('organization_id', organization.id)
+        .maybeSingle();
+      if (error) {
+        console.error('openProductForEdit', error);
+        return;
+      }
+      if (data) {
+        const row = normalizeProductRow(data as Record<string, unknown>);
+        setEditProduct((prev) => (prev?.id === row.id ? { ...prev, ...row } : prev));
+        setProducts((prev) => prev.map((p) => (p.id === row.id ? { ...p, ...row } : p)));
+      }
+    },
+    [organization?.id],
+  );
 
   const fetchData = React.useCallback(async () => {
     if (!organization) return;
@@ -168,7 +284,7 @@ export function InventoryDashboard() {
     const [productsRes, categoriesRes, movementsRes] = await Promise.all([
       supabase
         .from('products')
-        .select('*, categories(name)')
+        .select(PRODUCT_SELECT)
         .eq('organization_id', organization.id)
         .order('created_at', { ascending: false }),
       supabase
@@ -183,7 +299,11 @@ export function InventoryDashboard() {
         .order('created_at', { ascending: false })
         .limit(10),
     ]);
-    setProducts((productsRes.data as Product[]) || []);
+    if (productsRes.error) {
+      console.error('products fetch', productsRes.error);
+    }
+    const rawRows = (productsRes.data as Record<string, unknown>[]) || [];
+    setProducts(rawRows.map(normalizeProductRow));
     setCategories((categoriesRes.data as Category[]) || []);
     setStockMovements((movementsRes.data as StockMovement[]) || []);
     setLoading(false);
@@ -330,21 +450,140 @@ export function InventoryDashboard() {
     setTimeout(() => setCopiedId(false), 2000);
   }
 
+  /** Open the camera scanner from a search bar to look up an existing product. */
+  const openScannerForLookup = useCallback(() => {
+    setScanLookupError(null);
+    setScannerMode('lookup');
+    setScannerOpen(true);
+    // Drop focus from the search input so a follow-up USB scanner pulse
+    // is captured by the modal's keydown listener instead of typing into
+    // the search field. Otherwise scans intermittently "don't take".
+    if (typeof document !== 'undefined' && document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+  }, []);
+
+  /** Open the camera scanner from the "Scan to add" buttons. */
+  const openScannerForAdd = useCallback(() => {
+    setScannerMode('add');
+    setScannerOpen(true);
+  }, []);
+
   async function handleScan(barcode: string) {
     if (!organization) return;
-    const { existing, lookup: lookupData } = await lookup(barcode);
-    if (existing) {
-      alert(`"${existing.name}" is already in your inventory.`);
+
+    // Reject obviously bad barcodes before we hit the DB. PostgREST `or(...)`
+    // treats commas as filter separators, so any unsanitized byte here is a
+    // potential filter-injection vector that bypasses `organization_id`.
+    const safeBarcode = sanitizeBarcode(barcode);
+    if (!safeBarcode) {
+      setScanLookupError('Scanned value is not a valid barcode.');
       return;
     }
+    setScanLookupError(null);
+
+    if (scannerMode === 'lookup') {
+      setScanLookupLoading(true);
+      try {
+        // Prefer authoritative DB row so price/qty/expiry are always accurate.
+        const { data: dbRow } = await supabase
+          .from('products')
+          .select(PRODUCT_SELECT)
+          .eq('organization_id', organization.id)
+          .or(`barcode.eq.${safeBarcode},sku.eq.${safeBarcode}`)
+          .maybeSingle();
+
+        if (dbRow) {
+          const row = normalizeProductRow(dbRow as Record<string, unknown>);
+          setProducts((prev) => {
+            const idx = prev.findIndex((p) => p.id === row.id);
+            if (idx === -1) return [row, ...prev];
+            const next = prev.slice();
+            next[idx] = { ...next[idx], ...row };
+            return next;
+          });
+          setScannedCard({
+            product: {
+              id: row.id,
+              name: row.name,
+              sku: row.sku,
+              barcode: row.barcode,
+              price: row.price,
+              quantity: row.quantity,
+              low_stock_threshold: row.low_stock_threshold,
+              is_published: row.is_published,
+              category_name: row.categories?.name ?? null,
+              image_url: row.image_url,
+              best_before_date: row.best_before_date,
+              expiry_warning_days: row.expiry_warning_days,
+            },
+            inInventory: true,
+            barcode: safeBarcode,
+            productId: row.id,
+          });
+          return;
+        }
+
+        // Not in inventory — try external API for a richer preview, but with
+        // the same 4 s timeout so a slow OpenFoodFacts response can't hang
+        // the UI.
+        const lookupData = await lookupProductFromApi(safeBarcode);
+        setScannedCard({
+          product: {
+            name: lookupData?.name || 'Unknown Product',
+            barcode: safeBarcode,
+            image_url: lookupData?.imageUrl ?? null,
+            brand: lookupData?.brand ?? null,
+            category_name: lookupData?.categories ?? null,
+          },
+          inInventory: false,
+          barcode: safeBarcode,
+        });
+      } finally {
+        setScanLookupLoading(false);
+      }
+      return;
+    }
+
+    // "Scan to add" flow — open the modal *immediately* and load product
+    // metadata in the background. Previously this awaited OpenFoodFacts
+    // (no timeout), which made the UI hang for 30–40s on slow networks.
+    setScanLookupLoading(true);
+    try {
+      const existing = await checkExistingBarcode(safeBarcode).catch(() => null);
+      if (existing) {
+        alert(`"${existing.name}" is already in your inventory.`);
+        return;
+      }
+    } finally {
+      setScanLookupLoading(false);
+    }
+
     setEditProduct(null);
-    setAddModalPrefilled({
-      barcode,
-      name: lookupData?.name || 'Unknown Product',
-      imageUrl: lookupData?.imageUrl,
-      categories: lookupData?.categories,
-    });
+    setAddModalPrefilled({ barcode: safeBarcode, name: '' });
+    setAddModalLookupLoading(true);
     setAddModalOpen(true);
+
+    // Fire-and-forget background lookup with built-in timeout. When it
+    // resolves, patch the prefill state — AddProductModal's effect picks
+    // it up and fills the empty Name / Image fields.
+    void lookupProductFromApi(safeBarcode).then((lookupData) => {
+      setAddModalLookupLoading(false);
+      if (!lookupData) return;
+      setAddModalPrefilled((prev) => {
+        // The user may have already closed the modal or scanned a different
+        // barcode by the time the network call returns — only patch the
+        // *same* barcode we kicked off the lookup for.
+        if (!prev || prev.barcode !== safeBarcode) return prev;
+        return {
+          ...prev,
+          name: prev.name || lookupData.name,
+          brand: prev.brand ?? lookupData.brand,
+          imageUrl: prev.imageUrl ?? lookupData.imageUrl,
+          categories: prev.categories ?? lookupData.categories,
+        };
+      });
+    });
   }
 
   async function handleSaveProduct(product: {
@@ -388,17 +627,103 @@ export function InventoryDashboard() {
       throw new Error(msg);
     }
 
-    if (inserted && product.quantity > 0) {
-      await supabase.from('stock_movements').insert({
-        product_id: inserted.id,
-        organization_id: organization.id,
-        type: 'receive',
-        quantity: product.quantity,
-        note: 'Initial stock',
-      });
-    }
+    // Intentionally do NOT insert an "Initial stock" stock_movements row here.
+    // A trigger in production re-applies stock_movements.quantity to
+    // products.quantity, which previously caused the quantity to double on
+    // the first save (e.g. user enters 12 → DB ends up with 24). The
+    // product's quantity column is already set correctly by the insert
+    // above, so no audit-trail row is needed at creation time. If you ever
+    // want the "Initial stock" entry back, first either remove the trigger
+    // or insert the product with quantity 0 and let the receive movement
+    // bring it up.
+    void inserted;
     setAddModalPrefilled(null);
     fetchData();
+  }
+
+  async function handleDeleteProduct(productId: string) {
+    if (!organization) throw new Error('No organization. Please sign out and sign in again.');
+    if (!canManageCatalog) throw new Error('Permission denied.');
+    const { error } = await supabase
+      .from('products')
+      .delete()
+      .eq('id', productId)
+      .eq('organization_id', organization.id);
+    if (error) {
+      const msg =
+        error.code === '42501'
+          ? 'Permission denied.'
+          : error.message;
+      throw new Error(msg);
+    }
+    setAddModalOpen(false);
+    setAddModalPrefilled(null);
+    setEditProduct(null);
+    fetchData();
+  }
+
+  async function handleSaveCategory() {
+    if (!organization || !categoryModal) return;
+    const name = categoryModal.name.trim();
+    if (!name) {
+      setCategoryModalError('Enter a category name.');
+      return;
+    }
+    setCategorySaving(true);
+    setCategoryModalError(null);
+    try {
+      if (categoryModal.id) {
+        const { error } = await supabase
+          .from('categories')
+          .update({ name })
+          .eq('id', categoryModal.id)
+          .eq('organization_id', organization.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from('categories').insert({
+          name,
+          organization_id: organization.id,
+        });
+        if (error) throw error;
+      }
+      setCategoryModal(null);
+      await fetchData();
+    } catch (e) {
+      setCategoryModalError(e instanceof Error ? e.message : 'Could not save category.');
+    } finally {
+      setCategorySaving(false);
+    }
+  }
+
+  async function handleDeleteCategory() {
+    if (!organization || !categoryToDelete) return;
+    setCategoryDeleting(true);
+    setCategoryDeleteError(null);
+    try {
+      const { error } = await supabase
+        .from('categories')
+        .delete()
+        .eq('id', categoryToDelete.id)
+        .eq('organization_id', organization.id);
+      if (error) {
+        const msg = error.code === '42501' ? 'Permission denied.' : error.message;
+        throw new Error(msg);
+      }
+      setCategoryToDelete(null);
+      await fetchData();
+    } catch (e) {
+      setCategoryDeleteError(e instanceof Error ? e.message : 'Could not delete category.');
+    } finally {
+      setCategoryDeleting(false);
+    }
+  }
+
+  function openViewProductsForCategory(categoryId: string) {
+    setProductSearchQuery('');
+    setSidebarOpen(false);
+    setProductCategoryFilterId(categoryId);
+    setActiveTab('Products');
+    localStorage.setItem('tts_active_tab', 'Products');
   }
 
   async function handleUpdateProduct(
@@ -417,6 +742,12 @@ export function InventoryDashboard() {
     }
   ) {
     if (!organization) throw new Error('No organization. Please sign out and sign in again.');
+    const isPublished =
+      canManageCatalog
+        ? product.is_published
+        : editProduct?.id === productId
+          ? editProduct.is_published
+          : product.is_published;
     const { error } = await supabase
       .from('products')
       .update({
@@ -427,7 +758,7 @@ export function InventoryDashboard() {
         quantity: product.quantity,
         category_id: product.category_id || null,
         image_url: product.image_url || null,
-        is_published: product.is_published,
+        is_published: isPublished,
         best_before_date: product.best_before_date || null,
         expiry_warning_days: product.expiry_warning_days ?? 7,
         updated_at: new Date().toISOString(),
@@ -484,11 +815,37 @@ export function InventoryDashboard() {
     return bestBefore.getTime() < today.getTime();
   });
   const inventoryValue = products.reduce((sum, p) => sum + Number(p.price) * p.quantity, 0);
-  const categoriesWithCount = categories.map((cat) => ({
+  const categoriesWithCount = categories.map((cat, idx) => ({
     ...cat,
     productCount: products.filter((p) => p.category_id === cat.id).length,
-    color: CATEGORY_COLORS[categories.indexOf(cat) % CATEGORY_COLORS.length],
+    color: CATEGORY_COLORS[idx % CATEGORY_COLORS.length],
   }));
+
+  const productsForProductsTab = React.useMemo(() => {
+    let list = productCategoryFilterId
+      ? products.filter((p) => p.category_id === productCategoryFilterId)
+      : products;
+    const q = productSearchQuery.trim().toLowerCase();
+    if (q) {
+      list = list.filter(
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          (p.sku && String(p.sku).toLowerCase().includes(q)),
+      );
+    }
+    return list;
+  }, [products, productCategoryFilterId, productSearchQuery]);
+
+  const productsForDashboard = useMemo(() => {
+    const q = dashboardSearchQuery.trim().toLowerCase();
+    if (!q) return products;
+    return products.filter(
+      (p) =>
+        p.name.toLowerCase().includes(q) ||
+        (p.sku && String(p.sku).toLowerCase().includes(q)) ||
+        (p.barcode && String(p.barcode).toLowerCase().includes(q)),
+    );
+  }, [products, dashboardSearchQuery]);
 
   if (orgLoading || !organization) {
     return (
@@ -512,9 +869,7 @@ export function InventoryDashboard() {
               {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
             <Link to="/" className="flex items-center gap-2 group min-w-0">
-              <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Code2 className="w-5 h-5 text-white" />
-              </div>
+              <Logo className="w-8 h-8 text-slate-900 flex-shrink-0 group-hover:text-slate-700 transition-colors" />
               <span className="font-semibold text-slate-900 truncate">Tech to Store</span>
             </Link>
           </div>
@@ -549,6 +904,7 @@ export function InventoryDashboard() {
               (link) => link.name !== 'Team' || canSeeTeam
             ).map((link) => (
               <button
+                type="button"
                 key={link.name}
                 onClick={() => {
                   changeTab(link.name);
@@ -575,7 +931,7 @@ export function InventoryDashboard() {
         )}
 
         {/* Main Content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
+        <main className="relative z-10 flex-1 min-w-0 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
           {activeTab === 'Dashboard' && (
             <>
               <div className="mb-6 sm:mb-8">
@@ -652,18 +1008,31 @@ export function InventoryDashboard() {
                 <div className="px-4 sm:px-6 py-4 border-b border-slate-200/80 flex flex-col gap-4">
                   <h2 className="font-semibold text-slate-900">Recent Products</h2>
                   <div className="flex flex-col sm:flex-row gap-3">
-                    <div className="relative flex-1">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                      <input
-                        type="text"
-                        placeholder="Search products..."
-                        className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-slate-50/50"
-                      />
+                    <div className="flex flex-1 gap-2">
+                      <div className="relative flex-1 min-w-0">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                        <input
+                          type="text"
+                          placeholder="Search or scan a product..."
+                          value={dashboardSearchQuery}
+                          onChange={(e) => setDashboardSearchQuery(e.target.value)}
+                          className="w-full pl-10 pr-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-slate-50/50"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={openScannerForLookup}
+                        className="flex-shrink-0 inline-flex items-center justify-center min-h-[44px] min-w-[44px] w-11 h-11 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-500 hover:text-blue-600 hover:bg-blue-50 active:bg-blue-100 transition-colors touch-manipulation"
+                        aria-label="Scan a product barcode"
+                        title="Scan a product"
+                      >
+                        <Scan className="w-5 h-5" />
+                      </button>
                     </div>
                     <div className="flex gap-2">
                       <button
-                        onClick={() => setScannerOpen(true)}
-                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl text-sm font-medium transition-colors min-h-[44px] shadow-sm"
+                        onClick={openScannerForAdd}
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl text-sm font-medium transition-colors min-h-[44px] shadow-sm touch-manipulation"
                       >
                         <Scan className="w-4 h-4" />
                         Scan to add
@@ -672,9 +1041,10 @@ export function InventoryDashboard() {
                         onClick={() => {
                           setEditProduct(null);
                           setAddModalPrefilled(null);
+                          setAddModalLookupLoading(false);
                           setAddModalOpen(true);
                         }}
-                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white rounded-xl text-sm font-medium transition-colors min-h-[44px] shadow-sm"
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white rounded-xl text-sm font-medium transition-colors min-h-[44px] shadow-sm touch-manipulation"
                       >
                         <Plus className="w-4 h-4" />
                         Add Product
@@ -697,7 +1067,22 @@ export function InventoryDashboard() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200">
-                      {(loading ? [] : products).map((product) => {
+                      {loading ? (
+                        <tr>
+                          <td colSpan={7} className="px-6 py-12 text-center text-slate-500 text-sm">
+                            Loading products…
+                          </td>
+                        </tr>
+                      ) : productsForDashboard.length === 0 ? (
+                        <tr>
+                          <td colSpan={7} className="px-6 py-12 text-center text-slate-500 text-sm">
+                            {products.length === 0
+                              ? 'No products yet. Add one or scan a barcode.'
+                              : 'No products match your search.'}
+                          </td>
+                        </tr>
+                      ) : (
+                        productsForDashboard.map((product) => {
                         const isLowStock = product.quantity <= (product.low_stock_threshold ?? 5);
                         const expiryStatus = getExpiryStatus(product);
                         return (
@@ -724,11 +1109,8 @@ export function InventoryDashboard() {
                             </td>
                             <td className="px-6 py-4">
                               <button
-                                onClick={() => {
-                                  setEditProduct(product);
-                                  setAddModalPrefilled(null);
-                                  setAddModalOpen(true);
-                                }}
+                                type="button"
+                                onClick={() => void openProductForEdit(product)}
                                 className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-1 min-h-[44px]"
                               >
                                 Edit <ChevronRight className="w-4 h-4" />
@@ -736,13 +1118,23 @@ export function InventoryDashboard() {
                             </td>
                           </tr>
                         );
-                      })}
+                      })
+                      )}
                     </tbody>
                   </table>
                 </div>
                 {/* Mobile cards - polished */}
                 <div className="md:hidden divide-y divide-slate-100">
-                  {(loading ? [] : products).map((product) => {
+                  {loading ? (
+                    <div className="p-8 text-center text-slate-500 text-sm">Loading products…</div>
+                  ) : productsForDashboard.length === 0 ? (
+                    <div className="p-8 text-center text-slate-500 text-sm">
+                      {products.length === 0
+                        ? 'No products yet. Add one or scan a barcode.'
+                        : 'No products match your search.'}
+                    </div>
+                  ) : (
+                    productsForDashboard.map((product) => {
                     const isLowStock = product.quantity <= (product.low_stock_threshold ?? 5);
                     const expiryStatus = getExpiryStatus(product);
                     return (
@@ -759,11 +1151,8 @@ export function InventoryDashboard() {
                             </p>
                           </div>
                           <button
-                            onClick={() => {
-                              setEditProduct(product);
-                              setAddModalPrefilled(null);
-                              setAddModalOpen(true);
-                            }}
+                            type="button"
+                            onClick={() => void openProductForEdit(product)}
                             className="flex-shrink-0 flex items-center gap-1 px-3 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 active:bg-blue-200 rounded-xl text-sm font-medium min-h-[44px] transition-colors"
                           >
                             Edit <ChevronRight className="w-4 h-4" />
@@ -771,7 +1160,8 @@ export function InventoryDashboard() {
                         </div>
                       </div>
                     );
-                  })}
+                  })
+                  )}
                 </div>
               </div>
             </>
@@ -789,24 +1179,44 @@ export function InventoryDashboard() {
               <div className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm">
                 <div className="px-4 sm:px-6 py-4 border-b border-slate-200/80 flex flex-col gap-4">
                   <div className="flex flex-col sm:flex-row gap-3">
-                    <div className="relative flex-1">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                      <input
-                        type="text"
-                        placeholder="Search products..."
-                        className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-slate-50/50"
-                      />
+                    <div className="flex flex-1 gap-2">
+                      <div className="relative flex-1 min-w-0">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                        <input
+                          type="text"
+                          placeholder="Search or scan a product..."
+                          value={productSearchQuery}
+                          onChange={(e) => setProductSearchQuery(e.target.value)}
+                          className="w-full pl-10 pr-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-slate-50/50"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={openScannerForLookup}
+                        className="flex-shrink-0 inline-flex items-center justify-center min-h-[44px] min-w-[44px] w-11 h-11 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-500 hover:text-blue-600 hover:bg-blue-50 active:bg-blue-100 transition-colors touch-manipulation"
+                        aria-label="Scan a product barcode"
+                        title="Scan a product"
+                      >
+                        <Scan className="w-5 h-5" />
+                      </button>
                     </div>
-                    <select className="px-4 py-2.5 border border-slate-200 rounded-xl text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20 bg-slate-50/50">
-                      <option>All Categories</option>
+                    <select
+                      value={productCategoryFilterId ?? ''}
+                      onChange={(e) => setProductCategoryFilterId(e.target.value || null)}
+                      className="px-4 py-2.5 border border-slate-200 rounded-xl text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20 bg-slate-50/50 min-h-[44px]"
+                      aria-label="Filter by category"
+                    >
+                      <option value="">All Categories</option>
                       {categories.map((c) => (
-                        <option key={c.id}>{c.name}</option>
+                        <option key={c.id} value={c.id}>
+                          {c.name}
+                        </option>
                       ))}
                     </select>
                     <div className="flex gap-2">
                       <button
-                        onClick={() => setScannerOpen(true)}
-                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium min-h-[44px] shadow-sm"
+                        onClick={openScannerForAdd}
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium min-h-[44px] shadow-sm touch-manipulation"
                       >
                         <Scan className="w-4 h-4" />
                         Scan
@@ -815,9 +1225,10 @@ export function InventoryDashboard() {
                         onClick={() => {
                           setEditProduct(null);
                           setAddModalPrefilled(null);
+                          setAddModalLookupLoading(false);
                           setAddModalOpen(true);
                         }}
-                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-medium min-h-[44px] shadow-sm"
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-medium min-h-[44px] shadow-sm touch-manipulation"
                       >
                         <Plus className="w-4 h-4" />
                         Add
@@ -840,7 +1251,22 @@ export function InventoryDashboard() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200">
-                      {products.map((product) => {
+                      {loading ? (
+                        <tr>
+                          <td colSpan={7} className="px-6 py-12 text-center text-slate-500 text-sm">
+                            Loading products…
+                          </td>
+                        </tr>
+                      ) : productsForProductsTab.length === 0 ? (
+                        <tr>
+                          <td colSpan={7} className="px-6 py-12 text-center text-slate-500 text-sm">
+                            {products.length === 0
+                              ? 'No products yet. Add one or scan a barcode.'
+                              : 'No products match this filter. Try another category or clear search.'}
+                          </td>
+                        </tr>
+                      ) : (
+                        productsForProductsTab.map((product) => {
                         const isLowStock = product.quantity <= (product.low_stock_threshold ?? 5);
                         const expiryStatus = getExpiryStatus(product);
                         return (
@@ -867,11 +1293,8 @@ export function InventoryDashboard() {
                             </td>
                             <td className="px-6 py-4">
                               <button
-                                onClick={() => {
-                                  setEditProduct(product);
-                                  setAddModalPrefilled(null);
-                                  setAddModalOpen(true);
-                                }}
+                                type="button"
+                                onClick={() => void openProductForEdit(product)}
                                 className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-1"
                               >
                                 Edit <ChevronRight className="w-4 h-4" />
@@ -879,13 +1302,23 @@ export function InventoryDashboard() {
                             </td>
                           </tr>
                         );
-                      })}
+                      })
+                      )}
                     </tbody>
                   </table>
                 </div>
                 {/* Mobile cards - polished */}
                 <div className="md:hidden divide-y divide-slate-100">
-                  {products.map((product) => {
+                  {loading ? (
+                    <div className="p-8 text-center text-slate-500 text-sm">Loading products…</div>
+                  ) : productsForProductsTab.length === 0 ? (
+                    <div className="p-8 text-center text-slate-500 text-sm">
+                      {products.length === 0
+                        ? 'No products yet. Add one or scan a barcode.'
+                        : 'No products match this filter. Try another category or clear search.'}
+                    </div>
+                  ) : (
+                    productsForProductsTab.map((product) => {
                     const isLowStock = product.quantity <= (product.low_stock_threshold ?? 5);
                     const expiryStatus = getExpiryStatus(product);
                     return (
@@ -902,11 +1335,8 @@ export function InventoryDashboard() {
                             </p>
                           </div>
                           <button
-                            onClick={() => {
-                              setEditProduct(product);
-                              setAddModalPrefilled(null);
-                              setAddModalOpen(true);
-                            }}
+                            type="button"
+                            onClick={() => void openProductForEdit(product)}
                             className="flex-shrink-0 flex items-center gap-1 px-3 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 active:bg-blue-200 rounded-xl text-sm font-medium min-h-[44px] transition-colors"
                           >
                             Edit <ChevronRight className="w-4 h-4" />
@@ -914,7 +1344,8 @@ export function InventoryDashboard() {
                         </div>
                       </div>
                     );
-                  })}
+                  })
+                  )}
                 </div>
               </div>
             </>
@@ -928,24 +1359,68 @@ export function InventoryDashboard() {
                   <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Categories</h1>
                   <p className="text-slate-600 mt-0.5 text-sm sm:text-base">Organize your products</p>
                 </div>
-                <button className="flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-medium min-h-[44px] shadow-sm">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setCategoryModalError(null);
+                    setCategoryModal({ id: null, name: '' });
+                  }}
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-medium min-h-[44px] shadow-sm cursor-pointer"
+                >
                   <Plus className="w-4 h-4" />
                   Add Category
                 </button>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 {categoriesWithCount.map((cat) => (
-                  <div key={cat.name} className="bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow">
+                  <div key={cat.id} className="bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow">
                     <div className="flex items-start justify-between">
                       <div>
                         <h3 className="font-semibold text-slate-900">{cat.name}</h3>
                         <p className="text-sm text-slate-500 mt-1">{cat.productCount} products</p>
                       </div>
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${cat.color}`}>{cat.name}</span>
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium max-w-[40%] truncate shrink-0 ${cat.color}`} title={cat.name}>
+                        {cat.name}
+                      </span>
                     </div>
-                    <div className="mt-4 flex gap-2">
-                      <button className="text-sm text-blue-600 hover:text-blue-800 font-medium">Edit</button>
-                      <button className="text-sm text-slate-400 hover:text-slate-600">View products</button>
+                    <div className="mt-4 flex flex-wrap gap-3">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setCategoryModalError(null);
+                          setCategoryModal({ id: cat.id, name: cat.name });
+                        }}
+                        className="text-sm text-blue-600 hover:text-blue-800 font-medium min-h-[44px] min-w-[44px] px-1 cursor-pointer"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setCategoryDeleteError(null);
+                          setCategoryToDelete({ id: cat.id, name: cat.name });
+                        }}
+                        className="text-sm text-red-600 hover:text-red-800 font-medium min-h-[44px] min-w-[44px] px-1 cursor-pointer"
+                      >
+                        Delete
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          openViewProductsForCategory(cat.id);
+                        }}
+                        className="text-sm text-slate-600 hover:text-slate-900 font-medium min-h-[44px] px-1 cursor-pointer"
+                      >
+                        View products
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -1430,16 +1905,168 @@ export function InventoryDashboard() {
         </main>
       </div>
 
+      {categoryModal && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="category-modal-title"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setCategoryModal(null);
+          }}
+        >
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 border border-slate-200/80" onClick={(e) => e.stopPropagation()}>
+            <h3 id="category-modal-title" className="text-lg font-semibold text-slate-900">
+              {categoryModal.id ? 'Edit category' : 'Add category'}
+            </h3>
+            <label htmlFor="category-modal-name" className="sr-only">
+              Category name
+            </label>
+            <input
+              id="category-modal-name"
+              type="text"
+              value={categoryModal.name}
+              onChange={(e) => setCategoryModal({ ...categoryModal, name: e.target.value })}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleSaveCategory();
+                }
+              }}
+              placeholder="Category name"
+              className="mt-4 w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              autoFocus
+            />
+            {categoryModalError && (
+              <p className="mt-2 text-sm text-red-600">{categoryModalError}</p>
+            )}
+            <div className="mt-6 flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
+              <button
+                type="button"
+                onClick={() => setCategoryModal(null)}
+                className="px-4 py-2.5 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-100 min-h-[44px]"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={categorySaving}
+                onClick={() => void handleSaveCategory()}
+                className="px-4 py-2.5 rounded-xl text-sm font-medium text-white bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 min-h-[44px]"
+              >
+                {categorySaving ? 'Saving…' : 'Save'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {categoryToDelete && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="category-delete-title"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setCategoryToDelete(null);
+          }}
+        >
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 border border-slate-200/80" onClick={(e) => e.stopPropagation()}>
+            <h3 id="category-delete-title" className="text-lg font-semibold text-slate-900">
+              Delete category
+            </h3>
+            <p className="mt-3 text-sm text-slate-600">
+              Are you sure you want to delete <span className="font-medium text-slate-900">{categoryToDelete.name}</span>? Products in this category will not be deleted, but they will no longer be assigned to it.
+            </p>
+            {categoryDeleteError && (
+              <p className="mt-2 text-sm text-red-600">{categoryDeleteError}</p>
+            )}
+            <div className="mt-6 flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
+              <button
+                type="button"
+                onClick={() => setCategoryToDelete(null)}
+                className="px-4 py-2.5 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-100 min-h-[44px]"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={categoryDeleting}
+                onClick={() => void handleDeleteCategory()}
+                className="px-4 py-2.5 rounded-xl text-sm font-medium text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 min-h-[44px]"
+              >
+                {categoryDeleting ? 'Deleting…' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <BarcodeScannerModal
         isOpen={scannerOpen}
         onClose={() => setScannerOpen(false)}
         onScan={handleScan}
       />
+      <ScannedProductCard
+        isOpen={!!scannedCard}
+        inInventory={scannedCard?.inInventory ?? false}
+        product={scannedCard?.product ?? null}
+        scannedBarcode={scannedCard?.barcode ?? null}
+        onClose={() => setScannedCard(null)}
+        onEdit={
+          scannedCard?.inInventory && scannedCard.productId
+            ? () => {
+                const found = products.find((p) => p.id === scannedCard.productId);
+                setScannedCard(null);
+                if (found) void openProductForEdit(found);
+              }
+            : undefined
+        }
+        onAddToInventory={
+          scannedCard && !scannedCard.inInventory
+            ? () => {
+                const card = scannedCard;
+                setScannedCard(null);
+                setEditProduct(null);
+                setAddModalPrefilled({
+                  barcode: card.barcode,
+                  name: card.product.name,
+                  imageUrl: card.product.image_url ?? undefined,
+                  categories: card.product.category_name ?? undefined,
+                  brand: card.product.brand ?? undefined,
+                });
+                setAddModalLookupLoading(false);
+                setAddModalOpen(true);
+              }
+            : undefined
+        }
+      />
+      {scanLookupLoading && !addModalOpen && !scannedCard && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-[calc(env(safe-area-inset-bottom,0)+1rem)] right-4 z-50 max-w-sm bg-white border border-slate-200 text-slate-700 px-4 py-3 rounded-xl shadow-lg text-sm flex items-center gap-2"
+        >
+          <span className="inline-block h-3 w-3 rounded-full border-2 border-slate-300 border-t-blue-600 animate-spin" />
+          Looking up product…
+        </div>
+      )}
+      {scanLookupError && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-[calc(env(safe-area-inset-bottom,0)+1rem)] right-4 z-50 max-w-sm bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-xl shadow-lg text-sm"
+        >
+          {scanLookupError}
+        </div>
+      )}
       <AddProductModal
+        key={editProduct?.id ?? 'new'}
         isOpen={addModalOpen}
         onClose={() => {
           setAddModalOpen(false);
           setAddModalPrefilled(null);
+          setAddModalLookupLoading(false);
           setEditProduct(null);
         }}
         onSave={
@@ -1448,25 +2075,17 @@ export function InventoryDashboard() {
             : handleSaveProduct
         }
         categories={categories}
-        prefilled={addModalPrefilled}
+        prefilled={addModalPrefilled ?? undefined}
+        prefilledLoading={addModalLookupLoading}
         productId={editProduct?.id}
-        initialData={
-          editProduct
-            ? {
-                id: editProduct.id,
-                name: editProduct.name,
-                sku: editProduct.sku ?? '',
-                barcode: editProduct.barcode ?? '',
-                price: editProduct.price,
-                quantity: editProduct.quantity,
-                category_id: editProduct.category_id,
-                image_url: editProduct.image_url ?? '',
-                is_published: editProduct.is_published,
-                best_before_date: editProduct.best_before_date ?? '',
-                expiry_warning_days: editProduct.expiry_warning_days ?? 7,
-              }
+        allowWebsitePublish={canManageCatalog}
+        allowDelete={canManageCatalog && !!editProduct}
+        onDelete={
+          canManageCatalog && editProduct
+            ? () => handleDeleteProduct(editProduct.id)
             : undefined
         }
+        initialData={addModalInitialData}
       />
     </div>
   );

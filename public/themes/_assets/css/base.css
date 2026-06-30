@@ -1,0 +1,37 @@
+/* Tech to Store — shared template base
+ * Tiny reset + helpers used by all three demo templates.
+ * Each template still owns its own style.css for layout/personality.
+ */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; -webkit-font-smoothing: antialiased; }
+
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.5;
+  color: #1a1a1a;
+  background: #ffffff;
+}
+
+img, picture, svg, video { display: block; max-width: 100%; height: auto; }
+
+a { color: inherit; text-decoration: none; }
+
+button { font: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+
+input, textarea, select { font: inherit; color: inherit; }
+
+h1, h2, h3, h4, h5, h6, p { margin: 0; }
+
+ul, ol { margin: 0; padding: 0; list-style: none; }
+
+address { font-style: normal; }
+
+/* utility: visually hide (for screen readers only) */
+.sr-only {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}

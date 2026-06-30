@@ -23,3 +23,6 @@ dist
 
 # Supabase CLI — local cache
 supabase/.temp
+
+# Local design references (Figma / Claude design canvas exports)
+design/

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Contact — Your Store Name</title>
+  <meta name="store-title-suffix" content=" — Contact">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/themes/_assets/css/base.css">
+  <link rel="stylesheet" href="/themes/market/style.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="container row">
+    <div class="left"><span data-pz="address">123 Main Street, Your City, ST 00000</span></div>
+    <div class="right">
+      <a data-pz="phone" data-pz-link="tel" href="tel:+15551234567">+1 (555) 123-4567</a>
+      <a data-pz="email" data-pz-link="mailto" href="mailto:hello@yourstore.com">hello@yourstore.com</a>
+    </div>
+  </div>
+</div>
+
+<header class="site-header">
+  <div class="container row">
+    <a href="index.html" class="brand">
+      <span class="brand-mark"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/></svg></span>
+      <span data-pz="name">Your Store Name</span>
+    </a>
+    <nav class="nav">
+      <a href="index.html">Home</a>
+      <a href="shop.html">Shop</a>
+      <a href="about.html">About</a>
+      <a href="contact.html" class="active">Contact</a>
+    </nav>
+    <div class="actions"><a href="#" class="btn-cart">Cart · 3</a></div>
+  </div>
+</header>
+
+<main>
+  <section class="section">
+    <div class="container contact-grid">
+      <div class="contact-info">
+        <h1>Get in touch.</h1>
+        <p>Stop by, ring the shop, or send a note — we read every email and usually reply within a day.</p>
+
+        <div class="row">
+          <div class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+          <div>
+            <div class="label">Address</div>
+            <div class="value" data-pz="address">123 Main Street, Your City, ST 00000</div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div>
+          <div>
+            <div class="label">Phone</div>
+            <div class="value"><a data-pz="phone" data-pz-link="tel" href="tel:+15551234567">+1 (555) 123-4567</a></div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-10 5L2 7"/></svg></div>
+          <div>
+            <div class="label">Email</div>
+            <div class="value"><a data-pz="email" data-pz-link="mailto" href="mailto:hello@yourstore.com">hello@yourstore.com</a></div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+          <div>
+            <div class="label">Hours</div>
+            <div class="value" data-pz="hours">Mon - Sat: 8:00am to 9:00pm</div>
+          </div>
+        </div>
+      </div>
+
+      <form class="contact-form" onsubmit="event.preventDefault(); this.querySelector('button').textContent='Sent — thank you!';">
+        <h3>Send a message</h3>
+        <div class="field">
+          <label for="cf-name">Your name</label>
+          <input id="cf-name" type="text" placeholder="Sam Baker">
+        </div>
+        <div class="field">
+          <label for="cf-email">Your email</label>
+          <input id="cf-email" type="email" placeholder="sam@example.com">
+        </div>
+        <div class="field">
+          <label for="cf-topic">What's it about?</label>
+          <select id="cf-topic">
+            <option>General question</option>
+            <option>Special order</option>
+            <option>Wholesale enquiry</option>
+            <option>Press / media</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="cf-msg">Message</label>
+          <textarea id="cf-msg" placeholder="How can we help?"></textarea>
+        </div>
+        <button type="submit" class="btn" style="width:100%">Send message →</button>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand"><div class="brand" style="color:#fff"><span class="brand-mark"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/></svg></span><span data-pz="name">Your Store Name</span></div><p>Fresh, honest groceries for the neighbourhood.</p></div>
+      <div><h4>Shop</h4><ul><li><a href="shop.html">All products</a></li><li><a href="shop.html">Produce</a></li><li><a href="shop.html">Bakery</a></li><li><a href="shop.html">Pantry</a></li></ul></div>
+      <div><h4>Company</h4><ul><li><a href="about.html">About us</a></li><li><a href="contact.html">Contact</a></li></ul></div>
+      <div><h4>Visit us</h4><p data-pz="address">123 Main Street, Your City, ST 00000</p><p data-pz="hours">Mon - Sat: 8:00am to 9:00pm</p><p><a data-pz="phone" data-pz-link="tel" href="tel:+15551234567">+1 (555) 123-4567</a></p></div>
+    </div>
+    <div class="footer-bottom"><span>&copy; <span data-pz="name">Your Store Name</span>.</span><span>Demo template by Tech to Store.</span></div>
+  </div>
+</footer>
+
+<script src="/themes/_assets/js/personalize.js"></script>
+</body>
+</html>

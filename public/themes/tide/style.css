@@ -1,0 +1,324 @@
+/* Tide — Pacific seafood / oyster bar
+ * Pacific blues + sand. Modern sans. Lots of negative space.
+ */
+
+:root {
+  --bg: #f7f4ee;
+  --paper: #ffffff;
+  --ink: #0f1f2c;
+  --muted: #5a6c7a;
+  --line: #e3ddd0;
+  --deep: #18394f;
+  --tide: #2c5f7e;
+  --foam: #e7eef1;
+  --sand: #d9c8a3;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 16.5px;
+  line-height: 1.65;
+}
+
+h1, h2, h3, h4 {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+}
+
+.serif { font-family: 'Cormorant Garamond', 'Georgia', serif; font-weight: 400; }
+
+.container { max-width: 1280px; margin: 0 auto; padding: 0 2rem; }
+
+/* Header */
+.site-header {
+  position: sticky; top: 0; z-index: 30;
+  background: rgba(247,244,238,.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--line);
+}
+.site-header .row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 2rem;
+  padding: 1.4rem 0;
+}
+.brand {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.85rem; font-weight: 500;
+  color: var(--ink);
+  letter-spacing: .01em;
+  justify-self: start;
+}
+.brand em { font-style: italic; color: var(--tide); }
+.nav { display: flex; gap: 2.25rem; justify-content: center; }
+.nav a {
+  font-size: .82rem; font-weight: 500;
+  letter-spacing: .04em;
+  color: var(--muted); padding: .35rem 0;
+  position: relative;
+}
+.nav a.active, .nav a:hover { color: var(--ink); }
+.nav a.active::after {
+  content: ""; position: absolute; bottom: -3px; left: 0; right: 0;
+  height: 1.5px; background: var(--tide);
+}
+.actions { justify-self: end; display: flex; gap: .75rem; align-items: center; }
+.btn {
+  display: inline-flex; align-items: center; gap: .5rem;
+  padding: .85rem 1.6rem;
+  background: var(--ink); color: var(--paper);
+  font-weight: 500; font-size: .85rem;
+  letter-spacing: .02em;
+  border-radius: 999px;
+  transition: background .2s ease;
+}
+.btn:hover { background: var(--deep); }
+.btn-outline {
+  background: transparent; color: var(--ink);
+  border: 1.5px solid var(--ink);
+}
+.btn-outline:hover { background: var(--ink); color: var(--paper); }
+
+/* Hero */
+.hero {
+  position: relative;
+  padding: 6rem 0 5rem;
+}
+.hero h1 {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 400;
+  font-size: clamp(3rem, 7vw, 6rem);
+  letter-spacing: -0.02em;
+  line-height: 1;
+  max-width: 22ch;
+}
+.hero h1 em { font-style: italic; color: var(--tide); }
+.hero .lede {
+  margin-top: 2rem; max-width: 50ch;
+  font-size: 1.15rem; color: var(--muted);
+  line-height: 1.7;
+}
+.hero-actions { margin-top: 2.5rem; display: flex; gap: 1rem; flex-wrap: wrap; }
+.hero-photo {
+  margin-top: 4rem; aspect-ratio: 21/9; overflow: hidden;
+  border-radius: 4px;
+}
+.hero-photo img { width: 100%; height: 100%; object-fit: cover; }
+
+/* Stat strip */
+.stats { padding: 3.5rem 0; border-bottom: 1px solid var(--line); }
+.stats .row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; }
+.stat .num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 3rem; font-weight: 400; color: var(--tide);
+  line-height: 1;
+}
+.stat .lbl {
+  margin-top: .65rem;
+  font-size: .8rem; color: var(--muted);
+  letter-spacing: .04em;
+}
+
+/* Sections */
+.section { padding: 6rem 0; }
+.section.tight { padding: 4rem 0; }
+.section.dark { background: var(--ink); color: var(--foam); }
+.section.dark h2, .section.dark h3 { color: var(--paper); }
+.section.dark .muted { color: rgba(255,255,255,.6); }
+
+.section-head {
+  display: grid; grid-template-columns: 1fr auto;
+  gap: 2rem; margin-bottom: 3.5rem;
+  align-items: end;
+}
+.section-head .eyebrow {
+  font-size: .75rem; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--tide);
+  font-weight: 600;
+}
+.section-head h2 {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 400;
+  font-size: clamp(2.4rem, 4.5vw, 3.6rem);
+  margin-top: .5rem;
+  max-width: 24ch;
+}
+
+/* Menu list (raw bar / kitchen) */
+.menu-section { margin-bottom: 4rem; }
+.menu-section h3 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2rem; font-weight: 400;
+  padding-bottom: .75rem; margin-bottom: 1.75rem;
+  border-bottom: 1px solid var(--line);
+  font-style: italic;
+}
+.menu-item {
+  display: grid; grid-template-columns: 1fr auto;
+  gap: 1.5rem; align-items: baseline;
+  padding: 1.1rem 0;
+  border-bottom: 1px dashed var(--line);
+}
+.menu-item:last-child { border-bottom: none; }
+.menu-item .name {
+  font-size: 1.1rem; font-weight: 600; color: var(--ink);
+}
+.menu-item .desc {
+  font-size: .92rem; color: var(--muted);
+  margin-top: .35rem; line-height: 1.55; max-width: 60ch;
+}
+.menu-item .price {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.4rem; color: var(--tide);
+  font-weight: 500;
+}
+.menu-item .price small { font-size: .65em; color: var(--muted); margin-left: .25rem; }
+
+/* Catch grid */
+.catch-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.75rem; }
+.catch {
+  background: var(--paper);
+  border-radius: 4px; overflow: hidden;
+  border: 1px solid var(--line);
+  transition: transform .25s ease, box-shadow .25s ease;
+}
+.catch:hover { transform: translateY(-3px); box-shadow: 0 12px 32px -16px rgba(15,31,44,.18); }
+.catch .photo { aspect-ratio: 1/1; overflow: hidden; }
+.catch .photo img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s ease; }
+.catch:hover .photo img { transform: scale(1.04); }
+.catch .body { padding: 1.5rem; }
+.catch .where {
+  font-size: .72rem; color: var(--tide);
+  letter-spacing: .12em; text-transform: uppercase;
+  font-weight: 600;
+}
+.catch .name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.55rem; font-weight: 500;
+  margin-top: .35rem;
+}
+.catch .desc { color: var(--muted); font-size: .9rem; margin-top: .5rem; line-height: 1.55; }
+.catch .price {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.3rem; color: var(--ink); font-weight: 500;
+  margin-top: 1rem;
+  padding-top: 1rem; border-top: 1px solid var(--line);
+}
+
+/* Editorial */
+.editorial { display: grid; grid-template-columns: 5fr 7fr; gap: 5rem; align-items: center; }
+.editorial img { aspect-ratio: 4/5; object-fit: cover; border-radius: 4px; }
+.editorial h2 {
+  font-family: 'Cormorant Garamond', serif; font-weight: 400;
+  font-size: clamp(2.4rem, 4vw, 3.4rem); margin-bottom: 1.25rem;
+}
+.editorial p { color: var(--muted); font-size: 1.05rem; margin-bottom: 1rem; max-width: 50ch; line-height: 1.75; }
+
+/* Reservations form */
+.reservations-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; align-items: start; }
+.reservations-info h1 {
+  font-family: 'Cormorant Garamond', serif; font-weight: 400;
+  font-size: clamp(2.6rem, 5vw, 4.2rem);
+  margin-bottom: 1.25rem;
+}
+.reservations-info h1 em { font-style: italic; color: var(--tide); }
+.reservations-info p { color: var(--muted); font-size: 1.05rem; margin-bottom: 1rem; max-width: 50ch; line-height: 1.75; }
+
+.book-card {
+  background: var(--paper); border: 1px solid var(--line);
+  border-radius: 4px; padding: 2.25rem;
+}
+.book-card h3 {
+  font-family: 'Cormorant Garamond', serif; font-weight: 400;
+  font-size: 1.7rem; margin-bottom: 1.5rem;
+  padding-bottom: 1rem; border-bottom: 1px solid var(--line);
+}
+.field { margin-bottom: 1rem; }
+.field label {
+  display: block; font-size: .76rem;
+  letter-spacing: .04em; font-weight: 600;
+  margin-bottom: .4rem;
+}
+.field input, .field select, .field textarea {
+  width: 100%; padding: .85rem 1rem;
+  border: 1px solid var(--line); border-radius: 3px;
+  background: var(--bg);
+  font-size: .95rem; font-family: 'Inter', sans-serif;
+}
+.field input:focus, .field select:focus, .field textarea:focus {
+  outline: none; border-color: var(--tide); background: var(--paper);
+}
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.field textarea { min-height: 90px; resize: vertical; }
+
+/* Story page hero */
+.story-hero {
+  padding: 5rem 0;
+  text-align: center;
+}
+.story-hero .eyebrow {
+  font-size: .75rem; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--tide);
+  font-weight: 600;
+}
+.story-hero h1 {
+  font-family: 'Cormorant Garamond', serif; font-weight: 400;
+  font-size: clamp(3rem, 6vw, 5rem);
+  margin-top: 1rem;
+  max-width: 16ch; margin-left: auto; margin-right: auto;
+}
+.story-hero h1 em { font-style: italic; color: var(--tide); }
+
+/* Footer */
+.site-footer {
+  background: var(--ink); color: var(--foam);
+  padding: 4rem 0 1.75rem;
+  margin-top: 0;
+}
+.footer-grid {
+  display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr;
+  gap: 3rem;
+}
+.footer-grid .brand { color: var(--paper); }
+.footer-grid .brand em { color: var(--sand); }
+.footer-grid p { opacity: .75; line-height: 1.85; font-size: .92rem; max-width: 32ch; }
+.footer-grid h4 {
+  font-family: 'Inter', sans-serif;
+  font-size: .76rem; font-weight: 600;
+  letter-spacing: .12em; text-transform: uppercase;
+  color: var(--sand);
+  margin-bottom: 1rem;
+}
+.footer-grid ul, .footer-grid p { color: rgba(255,255,255,.75); font-size: .92rem; line-height: 2; }
+.footer-grid a { color: rgba(255,255,255,.75); }
+.footer-grid a:hover { color: var(--paper); }
+.footer-bottom {
+  margin-top: 3rem; padding-top: 1.5rem;
+  border-top: 1px solid rgba(255,255,255,.08);
+  font-size: .8rem; color: rgba(255,255,255,.4);
+  display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+}
+
+/* Mobile */
+@media (max-width: 1000px) {
+  .stats .row { grid-template-columns: repeat(2, 1fr); gap: 2rem; }
+  .catch-grid { grid-template-columns: repeat(2, 1fr); }
+  .editorial { grid-template-columns: 1fr; gap: 2.5rem; }
+  .reservations-grid { grid-template-columns: 1fr; gap: 2.5rem; }
+  .footer-grid { grid-template-columns: 1fr 1fr; }
+  .nav { display: none; }
+  .site-header .row { grid-template-columns: 1fr auto; }
+  .field-row { grid-template-columns: 1fr; }
+  .section-head { grid-template-columns: 1fr; }
+}
+@media (max-width: 560px) {
+  .catch-grid { grid-template-columns: 1fr; }
+  .footer-grid { grid-template-columns: 1fr; }
+  .hero { padding: 3rem 0; }
+  .hero-photo { margin-top: 2.5rem; aspect-ratio: 4/3; }
+}

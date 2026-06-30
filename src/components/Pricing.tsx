@@ -6,7 +6,7 @@ const plans = [
 {
   id: 'starter',
   name: 'Starter',
-  price: '$499',
+  price: '$799',
   period: 'one-time',
   description: 'Perfect for small businesses just getting started online.',
   features: [
@@ -22,7 +22,7 @@ const plans = [
 {
   id: 'professional',
   name: 'Professional',
-  price: '$999',
+  price: '$1,499',
   period: 'one-time',
   description: 'Comprehensive solution for growing businesses.',
   features: [
@@ -39,7 +39,7 @@ const plans = [
 {
   id: 'enterprise',
   name: 'Enterprise',
-  price: '$1499',
+  price: '$1,999',
   period: 'one-time',
   description: 'Tailored solutions for large-scale operations.',
   features: [

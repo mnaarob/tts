@@ -48,10 +48,10 @@ export function Hero() {
               </button>
               <button
                 type="button"
-                onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
+                onClick={() => document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' })}
                 className="w-full sm:w-auto px-8 py-4 bg-white border border-slate-200 hover:border-blue-200 hover:bg-blue-50 text-slate-700 rounded-xl font-semibold text-lg transition-all hover:-translate-y-1 cursor-pointer">
 
-                View Pricing
+                View Services
               </button>
             </div>
           </motion.div>

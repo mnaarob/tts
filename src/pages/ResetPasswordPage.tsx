@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Code2, Lock, CheckCircle } from 'lucide-react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Lock, CheckCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { Logo } from '../components/Logo';
+import { MIN_PASSWORD_LENGTH, PASSWORD_HELP_TEXT, checkPassword } from '../lib/password';
 
 export function ResetPasswordPage() {
   const [password, setPassword] = useState('');
@@ -11,6 +13,7 @@ export function ResetPasswordPage() {
   const [done, setDone] = useState(false);
   const [sessionReady, setSessionReady] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
@@ -18,18 +21,44 @@ export function ResetPasswordPage() {
         setSessionReady(true);
       }
     });
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) setSessionReady(true);
-    });
+
+    // Tokens may be in the query string (rewritten by index.tsx interceptor)
+    const params = new URLSearchParams(location.search);
+    const accessToken = params.get('access_token');
+    const refreshToken = params.get('refresh_token');
+
+    if (accessToken && refreshToken) {
+      supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
+        .then(({ error: sessErr }) => {
+          if (!sessErr) {
+            setSessionReady(true);
+            // Strip tokens from the URL so they don't leak via referer headers,
+            // browser history, screen-share, or analytics.
+            try {
+              window.history.replaceState({}, '', '#/reset-password');
+            } catch {
+              // history API blocked — best-effort only.
+            }
+          } else {
+            setError('Reset link is invalid or expired. Please request a new one.');
+          }
+        });
+    } else {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session) setSessionReady(true);
+      });
+    }
+
     return () => subscription.unsubscribe();
-  }, []);
+  }, [location.search]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
 
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters.');
+    const pwCheck = checkPassword(password);
+    if (!pwCheck.ok) {
+      setError(pwCheck.reason);
       return;
     }
     if (password !== confirm) {
@@ -44,6 +73,14 @@ export function ResetPasswordPage() {
     if (updateError) {
       setError(updateError.message);
       return;
+    }
+
+    // Force every other refresh token (including the recovery one) to be
+    // revoked so an attacker who already had the old session can't keep using it.
+    try {
+      await supabase.auth.signOut({ scope: 'global' });
+    } catch {
+      // Best effort — never block the success flow.
     }
 
     setDone(true);
@@ -65,9 +102,7 @@ export function ResetPasswordPage() {
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <Link to="/" className="flex justify-center items-center gap-2">
-          <div className="bg-blue-900 p-1.5 rounded-lg">
-            <Code2 className="w-8 h-8 text-white" />
-          </div>
+          <Logo className="w-11 h-11 text-slate-900" />
           <span className="font-bold text-2xl text-slate-900">Tech to Store</span>
         </Link>
         <h2 className="mt-6 text-center text-xl font-bold text-slate-900">
@@ -105,13 +140,13 @@ export function ResetPasswordPage() {
                     type="password"
                     autoComplete="new-password"
                     required
-                    minLength={6}
+                    minLength={MIN_PASSWORD_LENGTH}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="block w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                   />
                 </div>
-                <p className="mt-1 text-xs text-slate-500">At least 6 characters</p>
+                <p className="mt-1 text-xs text-slate-500">{PASSWORD_HELP_TEXT}</p>
               </div>
 
               <div>
@@ -125,7 +160,7 @@ export function ResetPasswordPage() {
                     type="password"
                     autoComplete="new-password"
                     required
-                    minLength={6}
+                    minLength={MIN_PASSWORD_LENGTH}
                     value={confirm}
                     onChange={(e) => setConfirm(e.target.value)}
                     className="block w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"

@@ -16,9 +16,17 @@ if [ -z "$DEPLOY_URL" ]; then
 fi
 
 echo ""
-echo "▶ Pointing techtostore.com → $DEPLOY_URL"
-npx vercel alias "$DEPLOY_URL" techtostore.com
-npx vercel alias "$DEPLOY_URL" www.techtostore.com
+echo "▶ Optional: assign custom domains (Vercel often aliases www automatically)"
+if npx vercel alias "$DEPLOY_URL" techtostore.com; then
+  echo "  ✓ techtostore.com → deployment"
+else
+  echo "  ⚠ Apex alias skipped (no CLI access to techtostore.com — set in Vercel → Domains if needed)."
+fi
+if npx vercel alias "$DEPLOY_URL" www.techtostore.com; then
+  echo "  ✓ www.techtostore.com → deployment"
+else
+  echo "  ⚠ www alias skipped (may already be assigned by Vercel)."
+fi
 
 echo ""
-echo "✓ Done! https://techtostore.com is live."
+echo "✓ Production deploy complete: $DEPLOY_URL"

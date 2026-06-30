@@ -22,9 +22,8 @@ export function useOrganization() {
     }
 
     async function fetchOrg() {
-      // Fetch both in parallel:
-      // - organizations table: provides the UUID used by products/categories/stock
-      // - store_admins → stores: provides the real store display name
+      setError(null);
+
       const [orgRes, saRes] = await Promise.all([
         supabase
           .from('organizations')
@@ -38,37 +37,61 @@ export function useOrganization() {
           .maybeSingle(),
       ]);
 
-      // Try to get the real store name from the stores table
       let storeName: string | null = null;
+      let storeOrganizationId: string | null = null;
       if (saRes.data?.store_id) {
         const { data: store } = await supabase
           .from('stores')
-          .select('name')
+          .select('name, organization_id')
           .eq('id', saRes.data.store_id)
           .maybeSingle();
         storeName = store?.name ?? null;
+        storeOrganizationId = store?.organization_id ?? null;
       }
 
       if (orgRes.error) {
         setError(orgRes.error.message);
         setOrganization(null);
-      } else if (orgRes.data) {
-        // Use the organization UUID for DB queries, but show the real store name
+        setLoading(false);
+        return;
+      }
+
+      // Owner: inventory org row exists; prefer store display name when linked
+      if (orgRes.data) {
         setOrganization({
           id: orgRes.data.id,
           name: storeName ?? orgRes.data.name,
           owner_id: orgRes.data.owner_id,
         });
-      } else if (saRes.data?.store_id && storeName) {
-        // No organizations row yet — use the store directly
-        setOrganization({
-          id: saRes.data.store_id,
-          name: storeName,
-          owner_id: user!.id,
-        });
-      } else {
-        setOrganization(null);
+        setLoading(false);
+        return;
       }
+
+      // Team member (or owner without org row): same inventory UUID as products via stores.organization_id
+      if (storeOrganizationId && storeName) {
+        const { data: orgRow } = await supabase
+          .from('organizations')
+          .select('owner_id')
+          .eq('id', storeOrganizationId)
+          .maybeSingle();
+
+        setOrganization({
+          id: storeOrganizationId,
+          name: storeName,
+          owner_id: orgRow?.owner_id ?? user!.id,
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Legacy: store row exists but organization_id not set yet (run migration 006)
+      if (saRes.data?.store_id && storeName && !storeOrganizationId) {
+        setOrganization(null);
+        setLoading(false);
+        return;
+      }
+
+      setOrganization(null);
       setLoading(false);
     }
 

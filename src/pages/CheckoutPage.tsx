@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Check, CreditCard, Lock, Code2 } from 'lucide-react';
+import { ArrowLeft, Check, CreditCard, Lock } from 'lucide-react';
+import { Logo } from '../components/Logo';
 export function CheckoutPage() {
   const [searchParams] = useSearchParams();
   const planParam = searchParams.get('plan');
@@ -9,15 +10,15 @@ export function CheckoutPage() {
   const plans = {
     starter: {
       name: 'Starter',
-      price: 499
+      price: 799
     },
     professional: {
       name: 'Professional',
-      price: 999
+      price: 1499
     },
     enterprise: {
       name: 'Enterprise',
-      price: 1499
+      price: 1999
     }
   };
   // Default to professional if invalid param
@@ -29,9 +30,7 @@ export function CheckoutPage() {
       <header className="bg-white border-b border-slate-200 py-4">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
           <Link to="/" className="flex items-center gap-2 group">
-            <div className="bg-blue-900 p-1.5 rounded-lg group-hover:bg-blue-800 transition-colors">
-              <Code2 className="w-6 h-6 text-white" />
-            </div>
+            <Logo className="w-9 h-9 text-slate-900 group-hover:text-slate-700 transition-colors" />
             <span className="font-bold text-xl tracking-tight text-slate-900">
               Tech to Store
             </span>

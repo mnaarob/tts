@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reservations — Your Store Name</title>
+  <meta name="store-title-suffix" content=" — Reservations">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/themes/_assets/css/base.css">
+  <link rel="stylesheet" href="/themes/tide/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container row">
+    <a href="index.html" class="brand"><em data-pz="name">Your Store Name</em></a>
+    <nav class="nav">
+      <a href="index.html">Home</a>
+      <a href="raw.html">Raw bar</a>
+      <a href="kitchen.html">Kitchen</a>
+      <a href="story.html">Story</a>
+      <a href="reservations.html" class="active">Reservations</a>
+    </nav>
+    <div class="actions"><a href="reservations.html" class="btn">Reserve</a></div>
+  </div>
+</header>
+
+<main>
+  <section class="container section">
+    <div class="reservations-grid">
+      <div class="reservations-info">
+        <span class="eyebrow">Book a table</span>
+        <h1>Reserve <em>a table.</em></h1>
+        <p>We hold a few seats at the bar for walk-ins each night. The rest of the room you can book up to a month in advance.</p>
+        <p>Larger parties (5-6 guests), tasting menus, and the chef's table behind the kitchen pass — give us a call and we'll work it out by hand.</p>
+
+        <div style="margin-top:2.5rem;padding:1.5rem;background:var(--paper);border:1px solid var(--line);border-radius:4px">
+          <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;margin-bottom:.5rem;font-weight:500">Walk-in policy</h3>
+          <p style="margin:0;font-size:.95rem;color:var(--muted)">14 seats at the marble bar are held for walk-ins until 9pm. First come, first served — we recommend arriving before 6pm on weekends.</p>
+        </div>
+        <div style="margin-top:1rem;padding:1.5rem;background:var(--paper);border:1px solid var(--line);border-radius:4px">
+          <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;margin-bottom:.5rem;font-weight:500">Hours</h3>
+          <p style="margin:0;font-size:.95rem;color:var(--muted)" data-pz="hours">Mon - Sat: 8:00am to 9:00pm</p>
+          <p style="margin:.5rem 0 0;font-size:.95rem;color:var(--muted)">Closed Sundays. Last seating one hour before close.</p>
+        </div>
+      </div>
+
+      <form class="book-card" onsubmit="event.preventDefault(); this.querySelector('button').textContent='Booked — confirmation sent';">
+        <h3>Make a reservation</h3>
+        <div class="field-row">
+          <div class="field"><label>Date</label><input type="date" required></div>
+          <div class="field"><label>Time</label><select><option>5:30 pm</option><option>6:00 pm</option><option>6:30 pm</option><option>7:00 pm</option><option>7:30 pm</option><option>8:00 pm</option><option>8:30 pm</option></select></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Guests</label><select><option>2 guests</option><option>3 guests</option><option>4 guests</option><option>5 guests</option><option>6 guests</option></select></div>
+          <div class="field"><label>Seating</label><select><option>Dining room</option><option>Marble bar</option><option>Patio (seasonal)</option></select></div>
+        </div>
+        <div class="field"><label>Your name</label><input type="text" placeholder="Sam Baker"></div>
+        <div class="field-row">
+          <div class="field"><label>Phone</label><input type="tel" placeholder="+1 (555) 123-4567"></div>
+          <div class="field"><label>Email</label><input type="email" placeholder="you@example.com"></div>
+        </div>
+        <div class="field"><label>Notes</label><textarea placeholder="Allergies, anniversaries, mobility needs — anything we should know."></textarea></div>
+        <button type="submit" class="btn" style="width:100%;justify-content:center">Request reservation</button>
+        <p style="font-size:.78rem;color:var(--muted);margin-top:.85rem;text-align:center">Same-day &amp; large parties: <a data-pz="phone" data-pz-link="tel" href="tel:+15551234567" style="color:var(--tide);font-weight:600">+1 (555) 123-4567</a></p>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div><div class="brand"><em data-pz="name">Your Store Name</em></div><p style="margin-top:1rem">Pacific seafood. Coastal raw-bar.</p></div>
+      <div><h4>Visit</h4><p data-pz="address">123 Main Street, Your City, ST 00000</p><p data-pz="hours">Mon - Sat: 8:00am to 9:00pm</p></div>
+      <div><h4>Reserve</h4><p><a data-pz="phone" data-pz-link="tel" href="tel:+15551234567">+1 (555) 123-4567</a></p><p><a data-pz="email" data-pz-link="mailto" href="mailto:hello@yourstore.com">hello@yourstore.com</a></p></div>
+      <div><h4>Menu</h4><ul><li><a href="raw.html">Raw bar</a></li><li><a href="kitchen.html">Kitchen</a></li><li><a href="reservations.html">Reservations</a></li></ul></div>
+    </div>
+    <div class="footer-bottom"><span>&copy; <span data-pz="name">Your Store Name</span>.</span><span>Demo template by Tech to Store.</span></div>
+  </div>
+</footer>
+
+<script src="/themes/_assets/js/personalize.js"></script>
+</body>
+</html>

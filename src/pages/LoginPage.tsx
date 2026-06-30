@@ -1,15 +1,21 @@
 import React, { useCallback, useRef, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Code2, Store, Hash, Mail, Lock } from 'lucide-react';
+import { Store, Hash, Mail, Lock } from 'lucide-react';
 import type { TurnstileInstance } from '@marsidev/react-turnstile';
 import { AuthTurnstile, TURNSTILE_SITE_KEY } from '../components/AuthTurnstile';
+import { Logo } from '../components/Logo';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import { clearPendingInvite, getPendingInvite } from '../lib/pendingInvite';
 
 export function LoginPage() {
-  const [storeName, setStoreName] = useState('');
-  const [employeeId, setEmployeeId] = useState('');
-  const [email, setEmail] = useState('');
+  const navigate = useNavigate();
+  const location = useLocation();
+  const prefillEmail = (location.state as { email?: string })?.email ?? '';
+  const pendingInvite = getPendingInvite();
+  const [storeName, setStoreName] = useState(pendingInvite?.store_name ?? '');
+  const [employeeId, setEmployeeId] = useState(pendingInvite?.employee_id ?? '');
+  const [email, setEmail] = useState(prefillEmail);
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -21,12 +27,11 @@ export function LoginPage() {
     setCaptchaToken(null);
     turnstileRef.current?.reset();
   }, []);
-  const navigate = useNavigate();
-  const location = useLocation();
   const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/inventory';
   const stateMsg = (location.state as { message?: string })?.message;
   const confirmMessage = stateMsg === 'confirm_email';
   const signupCompleteMessage = stateMsg === 'signup_complete';
+  const accountExistsMessage = stateMsg === 'account_exists';
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -53,9 +58,31 @@ export function LoginPage() {
     // Step 2: Validate store name + employee ID against DB
     // Normalize curly/smart quotes to straight apostrophes (phone keyboards auto-correct)
     const normalizedStoreName = storeName.trim().replace(/[\u2018\u2019\u201C\u201D\u0060]/g, "'");
+    const empUpper = employeeId.trim().toUpperCase();
+
+    // If we got here from a "account already exists" signup attempt, finish
+    // claiming the invite now — the RPC trusts auth.uid()/auth.email() so
+    // the user can never claim someone else's invite.
+    const pending = getPendingInvite();
+    if (pending) {
+      const { data: claim, error: claimErr } = await supabase.rpc('claim_employee_invite', {
+        p_store_name: pending.store_name,
+        p_employee_id: pending.employee_id,
+      });
+      if (!claimErr && claim && (claim as { ok?: boolean }).ok) {
+        clearPendingInvite();
+        setLoading(false);
+        navigate(from, { replace: true });
+        return;
+      }
+      // Either the invite no longer matches or it was already claimed —
+      // keep going through the regular validation path so the user gets a
+      // single, generic error if everything fails.
+    }
+
     const { data: valid, error: rpcError } = await supabase.rpc('validate_employee_login', {
       p_store_name: normalizedStoreName,
-      p_employee_id: employeeId.trim().toUpperCase(),
+      p_employee_id: empUpper,
     });
 
     if (rpcError) {
@@ -74,6 +101,7 @@ export function LoginPage() {
       return;
     }
 
+    clearPendingInvite();
     setLoading(false);
     navigate(from, { replace: true });
   }
@@ -82,9 +110,7 @@ export function LoginPage() {
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <Link to="/" className="flex justify-center items-center gap-2">
-          <div className="bg-blue-900 p-1.5 rounded-lg">
-            <Code2 className="w-8 h-8 text-white" />
-          </div>
+          <Logo className="w-11 h-11 text-slate-900" />
           <span className="font-bold text-2xl text-slate-900">Tech to Store</span>
         </Link>
         <h2 className="mt-6 text-center text-xl font-bold text-slate-900">Sign in to your account</h2>
@@ -103,6 +129,12 @@ export function LoginPage() {
                 Account created. Sign in below with the same store name, Employee ID, email, and password.
               </div>
             )}
+            {accountExistsMessage && (
+              <div className="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg text-sm">
+                You already have an account with this email. Sign in with your <strong>existing</strong> password —
+                we'll link your invite as soon as you're in.
+              </div>
+            )}
             {!TURNSTILE_SITE_KEY && (
               <div className="bg-amber-50 border border-amber-200 text-amber-900 px-4 py-3 rounded-lg text-sm">
                 CAPTCHA is enabled on this project. Add <code className="font-mono text-xs">VITE_TURNSTILE_SITE_KEY</code> to{' '}
@@ -110,8 +142,16 @@ export function LoginPage() {
               </div>
             )}
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-                {error}
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm space-y-2">
+                <p>{error}</p>
+                {/invalid login credentials/i.test(error) && (
+                  <p className="text-xs text-red-600/90 leading-relaxed">
+                    This comes from email/password verification (before store checks). Confirm your{' '}
+                    <strong>Supabase project</strong> matches production (see <code className="font-mono text-[11px]">.env</code>{' '}
+                    <code className="font-mono text-[11px]">VITE_SUPABASE_URL</code>), your email is confirmed, and complete the
+                    verification widget again — an expired Turnstile token can block sign-in.
+                  </p>
+                )}
               </div>
             )}
 

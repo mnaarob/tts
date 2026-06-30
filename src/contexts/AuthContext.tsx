@@ -24,25 +24,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
+      // Defence-in-depth: when the user is signed out from anywhere
+      // (token revoked, password reset, manager removed them), wipe any
+      // app-level state cached in storage.
+      if (event === 'SIGNED_OUT') {
+        try {
+          sessionStorage.clear();
+        } catch {
+          // Ignore — private mode etc.
+        }
+      }
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
   const signIn = async (email: string, password: string, captchaToken?: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
+    const emailNorm = email.trim().toLowerCase();
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: emailNorm,
       password,
       ...(captchaToken ? { options: { captchaToken } } : {}),
     });
+    if (!error && data.session) {
+      setSession(data.session);
+      setUser(data.session.user);
+    }
     return { error: error as Error | null };
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    // Explicit `global` revokes every refresh token tied to this user, so a
+    // stolen token from another device/browser is invalidated immediately.
+    await supabase.auth.signOut({ scope: 'global' });
+    setSession(null);
+    setUser(null);
   };
 
   return (

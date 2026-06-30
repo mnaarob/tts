@@ -5,9 +5,30 @@
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
 
+html {
+  /* Prevent iOS Safari from "auto-zooming" text after the soft keyboard
+     opens / closes on landscape orientation changes. */
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
+}
+
+/*
+ * iOS Safari auto-zooms a form control when its computed font-size is
+ * < 16 px and the user taps to focus it. The zoom is rarely undone on
+ * blur, so the entire app appears "zoomed in for no reason" after a
+ * refresh. Force at least 16 px on phones; layout still uses Tailwind's
+ * `text-sm` everywhere else (sm: breakpoint up).
+ */
+@media (max-width: 768px) {
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']),
+  select,
+  textarea {
+    font-size: 16px;
+  }
 }
 
 .safe-area-inset,
@@ -17,4 +38,17 @@ body {
 .safe-area-inset-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0);
 }
+
+/* Dynamic-viewport utilities — `100vh` on iOS is the *largest* viewport
+   (URL bar collapsed) and clips modals once the keyboard appears.
+   `dvh` resolves to the *current* viewport, `svh` to the smallest. */
+.h-dvh { height: 100dvh; }
+.min-h-dvh { min-height: 100dvh; }
+.max-h-dvh { max-height: 100dvh; }
+.h-svh { height: 100svh; }
+.min-h-svh { min-height: 100svh; }
+.max-h-svh { max-height: 100svh; }
+
+.pb-safe { padding-bottom: env(safe-area-inset-bottom, 0); }
+.pt-safe { padding-top: env(safe-area-inset-top, 0); }
 /* DO NOT DELETE THESE TAILWIND IMPORTS, OTHERWISE THE STYLING WILL NOT RENDER AT ALL - DO NOT DELETE THIS COMMENT */

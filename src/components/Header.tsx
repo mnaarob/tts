@@ -1,11 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Code2, Menu, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
+import { Logo } from './Logo';
 
 export function Header() {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   useEffect(() => {
@@ -18,16 +21,27 @@ export function Header() {
   const navLinks = [
   {
     name: 'Services',
-    href: '#services'
+    target: 'services'
   },
   {
     name: 'Features',
-    href: '#features'
-  },
-  {
-    name: 'Pricing',
-    href: '#pricing'
+    target: 'features'
   }];
+
+  function scrollToSection(id: string) {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
+    if (location.pathname !== '/') {
+      navigate('/');
+      window.setTimeout(() => {
+        const target = document.getElementById(id);
+        target?.scrollIntoView({ behavior: 'smooth' });
+      }, 80);
+    }
+  }
 
   return (
     <header
@@ -37,9 +51,7 @@ export function Header() {
         <div className="flex justify-between items-center">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
-            <div className="bg-blue-900 p-1.5 rounded-lg group-hover:bg-blue-800 transition-colors">
-              <Code2 className="w-6 h-6 text-white" />
-            </div>
+            <Logo className="w-9 h-9 text-slate-900 group-hover:text-slate-700 transition-colors" />
             <span
               className={`font-bold text-xl tracking-tight ${isScrolled ? 'text-slate-900' : 'text-slate-900'}`}>
 
@@ -50,14 +62,20 @@ export function Header() {
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-8">
             {navLinks.map((link) =>
-            <a
+            <button
+              type="button"
               key={link.name}
-              href={link.href}
-              className="text-sm font-medium text-slate-600 hover:text-blue-900 transition-colors">
+              onClick={() => scrollToSection(link.target)}
+              className="text-sm font-medium text-slate-600 hover:text-blue-900 transition-colors cursor-pointer bg-transparent border-none p-0">
 
                 {link.name}
-              </a>
+              </button>
             )}
+            <Link
+              to="/themes"
+              className="text-sm font-medium text-slate-600 hover:text-blue-900 transition-colors">
+              Templates
+            </Link>
             {user ? (
               <Link
                 to="/inventory"
@@ -115,15 +133,24 @@ export function Header() {
 
             <div className="px-4 py-6 space-y-4 flex flex-col">
               {navLinks.map((link) =>
-            <a
+            <button
+              type="button"
               key={link.name}
-              href={link.href}
-              className="text-base font-medium text-slate-600 hover:text-blue-900 py-2"
-              onClick={() => setIsMobileMenuOpen(false)}>
+              className="text-base font-medium text-slate-600 hover:text-blue-900 py-2 text-left bg-transparent border-none p-0 cursor-pointer"
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                scrollToSection(link.target);
+              }}>
 
                   {link.name}
-                </a>
+                </button>
             )}
+              <Link
+                to="/themes"
+                className="text-base font-medium text-slate-600 hover:text-blue-900 py-2"
+                onClick={() => setIsMobileMenuOpen(false)}>
+                Templates
+              </Link>
               {user ? (
                 <Link
                   to="/inventory"

@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Code2, Mail, ArrowLeft } from 'lucide-react';
+import { Mail, ArrowLeft } from 'lucide-react';
+import type { TurnstileInstance } from '@marsidev/react-turnstile';
+import { AuthTurnstile, TURNSTILE_SITE_KEY } from '../components/AuthTurnstile';
+import { Logo } from '../components/Logo';
 import { supabase } from '../lib/supabase';
 
 export function ForgotPasswordPage() {
@@ -8,36 +11,49 @@ export function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const turnstileRef = useRef<TurnstileInstance | undefined>(undefined);
+
+  const resetCaptcha = useCallback(() => {
+    setCaptchaToken(null);
+    turnstileRef.current?.reset();
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
-    setLoading(true);
-
-    const siteUrl = window.location.origin + window.location.pathname;
-    const redirectTo = `${siteUrl}#/reset-password`;
-
-    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo,
-    });
-
-    setLoading(false);
-
-    if (resetError) {
-      setError(resetError.message);
+    if (TURNSTILE_SITE_KEY && !captchaToken) {
+      setError('Complete the verification below.');
       return;
     }
+    setLoading(true);
 
+    // redirectTo is the base URL — Supabase appends #access_token=...&type=recovery
+    // The index.tsx interceptor rewrites that hash to #/reset-password?access_token=...
+    const redirectTo = window.location.origin + window.location.pathname;
+
+    // Fire-and-forget. We deliberately ignore the error and always show the
+    // same "check your email" message so this endpoint can't be used to
+    // enumerate which addresses have an account.
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo,
+      ...(captchaToken ? { captchaToken } : {}),
+    });
+    if (resetError) {
+      // Log to the console for operators; never echo to the UI.
+      console.warn('resetPasswordForEmail', resetError.message);
+    }
+
+    setLoading(false);
     setSent(true);
+    resetCaptcha();
   }
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <Link to="/" className="flex justify-center items-center gap-2">
-          <div className="bg-blue-900 p-1.5 rounded-lg">
-            <Code2 className="w-8 h-8 text-white" />
-          </div>
+          <Logo className="w-11 h-11 text-slate-900" />
           <span className="font-bold text-2xl text-slate-900">Tech to Store</span>
         </Link>
         <h2 className="mt-6 text-center text-xl font-bold text-slate-900">Reset your password</h2>
@@ -55,8 +71,8 @@ export function ForgotPasswordPage() {
               </div>
               <h3 className="text-lg font-semibold text-slate-900">Check your email</h3>
               <p className="mt-2 text-sm text-slate-600">
-                We sent a password reset link to <strong>{email}</strong>.
-                Click the link in the email to set a new password.
+                If an account exists for <strong>{email}</strong>, we just sent it a
+                password reset link. Click the link in the email to set a new password.
               </p>
               <Link
                 to="/login"
@@ -69,6 +85,12 @@ export function ForgotPasswordPage() {
           ) : (
             <>
               <form className="space-y-5" onSubmit={handleSubmit}>
+                {!TURNSTILE_SITE_KEY && (
+                  <div className="bg-amber-50 border border-amber-200 text-amber-900 px-4 py-3 rounded-lg text-sm">
+                    CAPTCHA is enabled on this project. Add <code className="font-mono text-xs">VITE_TURNSTILE_SITE_KEY</code> to{' '}
+                    <code className="font-mono text-xs">.env</code> (see <code className="font-mono text-xs">.env.example</code>).
+                  </div>
+                )}
                 {error && (
                   <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
                     {error}
@@ -93,6 +115,13 @@ export function ForgotPasswordPage() {
                     />
                   </div>
                 </div>
+
+                {TURNSTILE_SITE_KEY && (
+                  <div className="space-y-2">
+                    <p className="text-xs text-slate-500 text-center">Verification</p>
+                    <AuthTurnstile ref={turnstileRef} onTokenChange={setCaptchaToken} />
+                  </div>
+                )}
 
                 <button
                   type="submit"

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Shop — Your Store Name</title>
+  <meta name="store-title-suffix" content=" — Shop">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/themes/_assets/css/base.css">
+  <link rel="stylesheet" href="/themes/provisions/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container row">
+    <a href="index.html" class="brand"><span class="brand-mark">P</span> <span data-pz="name">Your Store Name</span></a>
+    <nav class="nav">
+      <a href="index.html">Home</a>
+      <a href="shop.html" class="active">Shop</a>
+      <a href="recipes.html">Recipes</a>
+      <a href="blog.html">Journal</a>
+      <a href="about.html">About</a>
+    </nav>
+    <div class="actions"><a href="#" class="icon-btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></a></div>
+  </div>
+</header>
+
+<main>
+  <section class="container section">
+    <div style="margin-bottom:2.5rem;text-align:center">
+      <span class="eyebrow">The market</span>
+      <h1 style="font-size:clamp(2.4rem,4vw,3.6rem);margin-top:.5rem;font-family:var(--serif)">All provisions</h1>
+      <p style="color:var(--muted);max-width:50ch;margin:.75rem auto 0">Everything we have on the shelf this week. Restocked Tuesday and Friday mornings.</p>
+    </div>
+    <div class="shop-grid">
+      <aside class="sidebar">
+        <h4>Department</h4>
+        <ul>
+          <li>All <span class="count">16</span></li>
+          <li>Produce <span class="count">6</span></li>
+          <li>Bakery <span class="count">3</span></li>
+          <li>Cheese &amp; dairy <span class="count">4</span></li>
+          <li>Pantry <span class="count">3</span></li>
+        </ul>
+        <h4>Origin</h4>
+        <ul>
+          <li>Local <span class="count">9</span></li>
+          <li>Domestic <span class="count">5</span></li>
+          <li>Imported <span class="count">2</span></li>
+        </ul>
+        <h4>Price</h4>
+        <input type="range" min="0" max="20" value="20">
+        <div style="display:flex;justify-content:space-between;font-size:.78rem;color:var(--muted);margin-top:.25rem"><span>$0</span><span>$20+</span></div>
+      </aside>
+
+      <div class="products">
+        <a class="product" href="product.html"><div class="photo"><img src="/themes/_assets/products/apple-red.jpg" alt=""></div><div class="meta">Produce · Local</div><div class="name">Honeycrisp apples</div><div class="price"><strong>$2.49</strong> / lb</div></a>
+        <a class="product" href="product.html"><div class="photo"><img src="/themes/_assets/products/strawberries.jpg" alt=""></div><div class="meta">Produce · Local</div><div class="name">Strawberries</div><div class="price"><strong>$4.75</strong> / pint</div></a>
+        <a class="product" href="product.html"><div class="photo"><img src="/themes/_assets/products/tomatoes.jpg" alt=""></div><div class="meta">Produce · Local</div><div class="name">Vine tomatoes</div><div class="price"><strong>$3.50</strong> / lb</div></a>
+        <a class="product" href="product.html"><div class="photo"><img src="/themes/_assets/products/avocado.jpg" alt=""></div><div class="meta">Produce · Domestic</div><div class="name">Hass avocados</div><div class="price"><strong>$1.99</strong> / each</div></a>
+        <a class="product" href="product.html"><div class="photo"><img src="/themes/_assets/products/peppers.jpg" alt=""></div><div class="meta">Produce · Local</div><div class="name">Bell peppers</div><div class="price"><strong>$1.79</strong> / each</div></a>
+        <a class="product" href="product.html"><div class="photo"><img src="/themes/_assets/products/greens.jpg" alt=""></div><div class="meta">Produce · Local</div><div class="name">Mixed leaves</div><div class="price"><strong>$3.20</strong> / 150g</div></a>
+        <a class="product" href="product.html"><div class="photo"><img src="/themes/_assets/products/bread-sourdough.jpg" alt=""></div><div class="meta">Bakery · In-house</div><div class="name">Country sourdough</div><div class="price"><strong>$6.50</strong> / loaf</div></a>
+        <a class="product" href="product.html"><div class="photo"><img src="/themes/_assets/products/bread-baguette.jpg" alt=""></div><div class="meta">Bakery · In-house</div><div class="name">French baguette</div><div class="price"><strong>$3.20</strong> / stick</div></a>
+        <a class="product" href="product.html"><div class="photo"><img src="/themes/_assets/products/bread-loaf.jpg" alt=""></div><div class="meta">Bakery · In-house</div><div class="name">Multigrain loaf</div><div class="price"><strong>$5.10</strong> / loaf</div></a>
+        <a class="product" href="product.html"><div class="photo"><img src="/themes/_assets/products/cheese-board.jpg" alt=""></div><div class="meta">Cheese · Vermont</div><div class="name">Cellar cheddar</div><div class="price"><strong>$14.50</strong> / 250g</div></a>
+        <a class="product" href="product.html"><div class="photo"><img src="/themes/_assets/products/cheese-wheel.jpg" alt=""></div><div class="meta">Cheese · France</div><div class="name">Camembert wheel</div><div class="price"><strong>$11.80</strong> / each</div></a>
+        <a class="product" href="product.html"><div class="photo"><img src="/themes/_assets/products/eggs.jpg" alt=""></div><div class="meta">Dairy · Local</div><div class="name">Pastured eggs</div><div class="price"><strong>$7.99</strong> / dozen</div></a>
+        <a class="product" href="product.html"><div class="photo"><img src="/themes/_assets/products/milk-bottle.jpg" alt=""></div><div class="meta">Dairy · Local</div><div class="name">Whole milk</div><div class="price"><strong>$5.49</strong> / 2L</div></a>
+        <a class="product" href="product.html"><div class="photo"><img src="/themes/_assets/products/olive-oil.jpg" alt=""></div><div class="meta">Pantry · Italy</div><div class="name">Cold-pressed olive oil</div><div class="price"><strong>$18.50</strong> / 500mL</div></a>
+        <a class="product" href="product.html"><div class="photo"><img src="/themes/_assets/products/honey.jpg" alt=""></div><div class="meta">Pantry · Local apiary</div><div class="name">Wildflower honey</div><div class="price"><strong>$11.00</strong> / jar</div></a>
+        <a class="product" href="product.html"><div class="photo"><img src="/themes/_assets/products/coffee-beans.jpg" alt=""></div><div class="meta">Pantry · Domestic</div><div class="name">Single-origin coffee</div><div class="price"><strong>$16.00</strong> / 340g</div></a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-mast">
+      <div class="brand"><span class="brand-mark">P</span> <span data-pz="name">Your Store Name</span></div>
+      <p>An independent grocer.</p>
+    </div>
+    <div class="footer-grid">
+      <div><h4>Visit</h4><p data-pz="address">123 Main Street, Your City, ST 00000</p><p data-pz="hours">Mon - Sat: 8:00am to 9:00pm</p></div>
+      <div><h4>Get in touch</h4><p><a data-pz="phone" data-pz-link="tel" href="tel:+15551234567">+1 (555) 123-4567</a></p><p><a data-pz="email" data-pz-link="mailto" href="mailto:hello@yourstore.com">hello@yourstore.com</a></p></div>
+      <div><h4>Shop</h4><ul><li><a href="shop.html">All provisions</a></li><li><a href="recipes.html">Recipes</a></li><li><a href="blog.html">Journal</a></li></ul></div>
+      <div><h4>About</h4><ul><li><a href="about.html">Our story</a></li><li><a href="about.html">Sourcing</a></li></ul></div>
+    </div>
+    <div class="footer-bottom"><span>&copy; <span data-pz="name">Your Store Name</span>.</span><span>Demo template by Tech to Store.</span></div>
+  </div>
+</footer>
+
+<script src="/themes/_assets/js/personalize.js"></script>
+</body>
+</html>

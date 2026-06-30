@@ -1,9 +1,13 @@
 import React, { useCallback, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Code2, Store, Hash, Mail, Lock } from 'lucide-react';
+import { Store, Hash, Mail, Lock } from 'lucide-react';
 import type { TurnstileInstance } from '@marsidev/react-turnstile';
 import { AuthTurnstile, TURNSTILE_SITE_KEY } from '../components/AuthTurnstile';
+import { Logo } from '../components/Logo';
+import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import { MIN_PASSWORD_LENGTH, PASSWORD_HELP_TEXT, checkPassword } from '../lib/password';
+import { setPendingInvite } from '../lib/pendingInvite';
 
 export function SignupPage() {
   const [storeName, setStoreName] = useState('');
@@ -15,6 +19,7 @@ export function SignupPage() {
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const turnstileRef = useRef<TurnstileInstance | undefined>(undefined);
   const navigate = useNavigate();
+  const { signIn } = useAuth();
 
   const resetCaptcha = useCallback(() => {
     setCaptchaToken(null);
@@ -37,55 +42,111 @@ export function SignupPage() {
       return;
     }
 
+    const pwCheck = checkPassword(password);
+    if (!pwCheck.ok) {
+      setLoading(false);
+      setError(pwCheck.reason);
+      resetCaptcha();
+      return;
+    }
+
     const normalizedStoreName = storeName.trim().replace(/[\u2018\u2019\u201C\u201D\u0060]/g, "'");
+    const empUpper = employeeId.trim().toUpperCase();
+    const emailTrim = email.trim();
 
     const { data, error: fnError } = await supabase.functions.invoke<{
       ok?: boolean;
       error?: string;
       message?: string;
+      code?: 'account_exists' | 'invalid' | 'rate_limited' | 'server_error';
     }>('claim-employee-signup', {
       body: {
         store_name: normalizedStoreName,
-        employee_id: employeeId.trim().toUpperCase(),
-        email: email.trim(),
+        employee_id: empUpper,
+        email: emailTrim,
         password,
         captchaToken: captchaToken ?? undefined,
       },
     });
 
-    setLoading(false);
-
     if (fnError) {
+      setLoading(false);
       setError(fnError.message || 'Could not create account. Try again.');
       resetCaptcha();
       return;
     }
 
     if (data && typeof data === 'object' && data.ok === false) {
+      // The edge function refuses to overwrite an existing account.
+      // Send the user to /login with the invite info pinned so we can
+      // finish the link via the `claim_employee_invite` RPC after sign-in.
+      if (data.code === 'account_exists') {
+        setPendingInvite({ store_name: normalizedStoreName, employee_id: empUpper });
+        setLoading(false);
+        navigate('/login', {
+          replace: true,
+          state: {
+            email: emailTrim,
+            message: 'account_exists',
+          },
+        });
+        return;
+      }
+
+      setLoading(false);
       setError(data.error || 'Could not create account.');
       resetCaptcha();
       return;
     }
 
-    navigate('/login', {
-      replace: true,
-      state: { message: 'signup_complete' },
+    const { error: signInError } = await signIn(emailTrim, password, captchaToken ?? undefined);
+    if (signInError) {
+      setLoading(false);
+      setError(
+        signInError.message ||
+          'Account is ready but sign-in failed. Use Sign in on the login page with the same email and password.',
+      );
+      resetCaptcha();
+      return;
+    }
+
+    const { data: valid, error: rpcError } = await supabase.rpc('validate_employee_login', {
+      p_store_name: normalizedStoreName,
+      p_employee_id: empUpper,
     });
+
+    if (rpcError) {
+      await supabase.auth.signOut();
+      setLoading(false);
+      setError(`Validation failed: ${rpcError.message}`);
+      resetCaptcha();
+      return;
+    }
+
+    if (!valid) {
+      await supabase.auth.signOut();
+      setLoading(false);
+      setError('Could not open inventory: store or Employee ID did not match your new account. Try signing in from the login page.');
+      resetCaptcha();
+      return;
+    }
+
+    setLoading(false);
+    navigate('/inventory', { replace: true });
   }
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <Link to="/" className="flex justify-center items-center gap-2">
-          <div className="bg-blue-900 p-1.5 rounded-lg">
-            <Code2 className="w-8 h-8 text-white" />
-          </div>
+          <Logo className="w-11 h-11 text-slate-900" />
           <span className="font-bold text-2xl text-slate-900">Tech to Store</span>
         </Link>
         <h2 className="mt-6 text-center text-xl font-bold text-slate-900">Create your account</h2>
         <p className="mt-2 text-center text-sm text-slate-500 max-w-md mx-auto px-2">
           Your manager adds you in <strong className="text-slate-700">Team</strong> with your name and email, then shares your{' '}
-          <strong className="text-slate-700">Employee ID</strong>. Use the <strong className="text-slate-700">same email</strong> your manager entered, plus your store name, ID, and a new password.
+          <strong className="text-slate-700">Employee ID</strong>. Enter the <strong className="text-slate-700">same email</strong>, store name, and ID, then choose a{' '}
+          <strong className="text-slate-700">password</strong> you will use to sign in (even if you already used this email elsewhere—we will link your invite to your account).
         </p>
       </div>
 
@@ -184,13 +245,13 @@ export function SignupPage() {
                   type="password"
                   autoComplete="new-password"
                   required
-                  minLength={6}
+                  minLength={MIN_PASSWORD_LENGTH}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="block w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                 />
               </div>
-              <p className="mt-1 text-xs text-slate-500">At least 6 characters</p>
+              <p className="mt-1 text-xs text-slate-500">{PASSWORD_HELP_TEXT} This becomes your password for Sign in after you join.</p>
             </div>
 
             {TURNSTILE_SITE_KEY && (
