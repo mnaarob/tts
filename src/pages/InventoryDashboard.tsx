@@ -963,7 +963,7 @@ export function InventoryDashboard() {
                 </div>
               </div>
 
-              {/* Low Stock Alert - polished */}
+              {/* Low Stock Alert - polished 
               {lowStockCount > 0 && (
                 <div className="bg-amber-50/90 border border-amber-200/80 rounded-2xl p-4 sm:p-5 mb-6 sm:mb-8 flex items-start gap-3 shadow-sm">
                   <div className="p-2 bg-amber-100 rounded-xl flex-shrink-0">
@@ -979,8 +979,9 @@ export function InventoryDashboard() {
                   </div>
                 </div>
               )}
+              */}
 
-              {/* Expiring Soon Alert - polished */}
+              {/* Expiring Soon Alert - polished 
               {(expiringSoonProducts.length > 0 || expiredProducts.length > 0) && (
                 <div className="bg-red-50/90 border border-red-200/80 rounded-2xl p-4 sm:p-5 mb-6 sm:mb-8 shadow-sm">
                   <p className="font-semibold text-red-900 mb-1">
@@ -1002,6 +1003,7 @@ export function InventoryDashboard() {
                   </p>
                 </div>
               )}
+              */}
 
               {/* Products Table */}
               <div className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm">
