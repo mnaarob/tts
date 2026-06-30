@@ -18,7 +18,7 @@ export function Footer() {
             </p>
           </div>
 
-          <div>
+          {/*<div>
             <h4 className="font-bold text-white mb-6">Company</h4>
             <ul className="space-y-3 text-sm">
               <li>
@@ -42,7 +42,7 @@ export function Footer() {
                 </a>
               </li>
             </ul>
-          </div>
+          </div>*/}
 
           <div>
             <h4 className="font-bold text-white mb-6">Services</h4>
@@ -94,7 +94,7 @@ export function Footer() {
 
         <div className="pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-slate-500">
           <p>© 2025 Tech to Store. Proudly Canadian. 🇨🇦</p>
-          <div className="flex gap-6">
+          {/*<div className="flex gap-6">
             <a href="#" className="hover:text-white transition-colors">
               Twitter
             </a>
@@ -104,7 +104,7 @@ export function Footer() {
             <a href="#" className="hover:text-white transition-colors">
               Instagram
             </a>
-          </div>
+          </div>*/}
         </div>
       </div>
     </footer>);
