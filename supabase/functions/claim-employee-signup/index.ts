@@ -111,7 +111,10 @@ async function verifyTurnstile(
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body,
     });
-    const data = (await res.json()) as { success?: boolean };
+    const data = (await res.json()) as { success?: boolean; 'error-codes'?: string[] };
+    if (data.success !== true) {
+      console.warn('turnstile siteverify failed', data['error-codes']);
+    }
     return data.success === true;
   } catch (e) {
     console.error('turnstile siteverify', e);

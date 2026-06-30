@@ -1,8 +1,7 @@
 import React, { useCallback, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Store, Hash, Mail, Lock } from 'lucide-react';
-import type { TurnstileInstance } from '@marsidev/react-turnstile';
-import { AuthTurnstile, TURNSTILE_SITE_KEY } from '../components/AuthTurnstile';
+import { AuthTurnstile, TURNSTILE_SITE_KEY, type AuthTurnstileHandle } from '../components/AuthTurnstile';
 import { Logo } from '../components/Logo';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
@@ -17,7 +16,7 @@ export function SignupPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
-  const turnstileRef = useRef<TurnstileInstance | undefined>(undefined);
+  const turnstileRef = useRef<AuthTurnstileHandle | undefined>(undefined);
   const navigate = useNavigate();
   const { signIn } = useAuth();
 
@@ -99,7 +98,24 @@ export function SignupPage() {
       return;
     }
 
-    const { error: signInError } = await signIn(emailTrim, password, captchaToken ?? undefined);
+    // Edge function already verified the first token; Supabase sign-in needs a fresh one (single-use).
+    let signInCaptcha: string | undefined = captchaToken ?? undefined;
+    if (TURNSTILE_SITE_KEY) {
+      if (!turnstileRef.current) {
+        setLoading(false);
+        setError('Complete the verification below.');
+        return;
+      }
+      try {
+        signInCaptcha = await turnstileRef.current.getFreshToken();
+      } catch (e) {
+        setLoading(false);
+        setError(e instanceof Error ? e.message : 'Complete the verification below.');
+        return;
+      }
+    }
+
+    const { error: signInError } = await signIn(emailTrim, password, signInCaptcha);
     if (signInError) {
       setLoading(false);
       setError(
@@ -156,7 +172,7 @@ export function SignupPage() {
             {!TURNSTILE_SITE_KEY && (
               <div className="bg-amber-50 border border-amber-200 text-amber-900 px-4 py-3 rounded-lg text-sm">
                 CAPTCHA is enabled on this project. Add <code className="font-mono text-xs">VITE_TURNSTILE_SITE_KEY</code> to{' '}
-                <code className="font-mono text-xs">.env</code> (see <code className="font-mono text-xs">.env.example</code>).
+                <code className="font-mono text-xs">.env.local</code> (see <code className="font-mono text-xs">.env.example</code>).
               </div>
             )}
             {error && (
@@ -263,7 +279,7 @@ export function SignupPage() {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || (Boolean(TURNSTILE_SITE_KEY) && !captchaToken)}
               className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-emerald-500 hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-50 transition-colors mt-2"
             >
               {loading ? 'Creating account...' : 'Create account'}

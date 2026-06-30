@@ -23,6 +23,7 @@ git push origin main
 5. Add environment variables (Settings → Environment Variables):
    - `VITE_SUPABASE_URL` = your Supabase URL
    - `VITE_SUPABASE_ANON_KEY` = your Supabase publishable key
+   - `VITE_TURNSTILE_SITE_KEY` = your Cloudflare Turnstile **site** key (public; required when Supabase Auth CAPTCHA is on)
 6. Click **Deploy**
 
 ### 3. Add your domain
@@ -60,7 +61,7 @@ Usually 5–30 minutes. Vercel will issue an SSL certificate automatically.
 3. Build settings:
    - Build command: `npm run build`
    - Publish directory: `dist`
-4. Add env vars: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
+4. Add env vars: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_TURNSTILE_SITE_KEY`
 5. Deploy, then add your domain in **Domain settings**
 
 ---
@@ -80,9 +81,21 @@ Usually 5–30 minutes. Vercel will issue an SSL certificate automatically.
 
 1. Vercel project → **Settings** → **Environment Variables**
 2. Add:
-   - `VITE_SUPABASE_URL` = `https://iyubmgzxypcanrbyuyck.supabase.co`
+   - `VITE_SUPABASE_URL` = your Supabase URL
    - `VITE_SUPABASE_ANON_KEY` = your Supabase publishable key
+   - `VITE_TURNSTILE_SITE_KEY` = your Turnstile site key
 3. Redeploy (Deployments → ... → Redeploy)
+
+### CAPTCHA (Turnstile) checklist
+
+1. **Cloudflare Turnstile** — create a widget; add `localhost` and your production domains to allowed hostnames.
+2. **Frontend** — set `VITE_TURNSTILE_SITE_KEY` in Vercel / GitHub Actions secrets / local `.env.local` (never commit).
+3. **Supabase Auth** — Dashboard → Authentication → Bot and Abuse Protection → enable Turnstile with the **secret** key.
+4. **Employee signup edge function** — `supabase secrets set TURNSTILE_SECRET_KEY=... --project-ref YOUR_REF` (same secret as Supabase Auth).
+
+Local dev: copy [`.env.example`](.env.example) to `.env.local` and fill in values.
+
+**Do not commit** `.env`, `.env.local`, `.env.production`, or any file containing service role keys. Run `bash scripts/check-secrets.sh` before pushing to catch mistakes.
 
 ---
 
@@ -94,8 +107,9 @@ Usually 5–30 minutes. Vercel will issue an SSL certificate automatically.
    - (If it stays on "Deploy from a branch", the Actions deploy will not be used and you'll get 404)
 
 2. **Add repository secrets** (Settings → Secrets and variables → Actions):
-   - `VITE_SUPABASE_URL` = `https://iyubmgzxypcanrbyuyck.supabase.co`
+   - `VITE_SUPABASE_URL` = your Supabase URL
    - `VITE_SUPABASE_ANON_KEY` = your Supabase publishable key
+   - `VITE_TURNSTILE_SITE_KEY` = your Turnstile site key
 
 3. Push to `main` – the workflow will build and deploy
 

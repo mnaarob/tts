@@ -4,10 +4,16 @@ node_modules
 # Build
 dist
 
-# Environment (contains secrets)
+# Environment (contains secrets — never commit)
 .env
 .env.local
 .env.*.local
+.env.production
+.env.development
+.env.test
+.env.staging
+# Allow the documented template only
+!.env.example
 
 # IDE
 .vscode/*
