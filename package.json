@@ -8,6 +8,7 @@
     "build": "npx vite build",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "check-secrets": "bash scripts/check-secrets.sh",
+    "setup:secrets": "bash scripts/setup-supabase-secrets.sh",
     "preview": "npx vite preview",
     "deploy": "bash deploy.sh",
     "deploy:functions": "bash scripts/deploy-invite-function.sh"
