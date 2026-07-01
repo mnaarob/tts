@@ -1,6 +1,3 @@
--- Pending team invites: row exists until invitee sets password and completes onboarding.
--- store_admins is only inserted after accept (via complete-store-invite Edge Function).
-
 CREATE TABLE IF NOT EXISTS store_invites (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   store_id text NOT NULL,
@@ -17,7 +14,6 @@ CREATE UNIQUE INDEX IF NOT EXISTS store_invites_store_email_lower_idx
 
 ALTER TABLE store_invites ENABLE ROW LEVEL SECURITY;
 
--- Managers/owners can list and revoke invites for their store
 CREATE POLICY "store_managers_select_invites"
   ON store_invites FOR SELECT
   USING (

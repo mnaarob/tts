@@ -1,7 +1,3 @@
--- Remove a team member from a store.
--- Only owners/managers of the same store can remove non-owner members.
--- Uses SECURITY DEFINER to bypass RLS on store_admins.
-
 CREATE OR REPLACE FUNCTION remove_store_member(p_store_id text, p_user_id uuid)
 RETURNS boolean
 LANGUAGE plpgsql

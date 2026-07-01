@@ -1,8 +1,7 @@
--- Products: DELETE only for org owner or store owner/manager; staff cannot toggle is_published via API.
+-- Product RLS: staff cannot publish or delete
 
 DROP POLICY IF EXISTS "Users can manage products in their store org" ON products;
 
--- Any store-org member (or org owner) can read/insert/update
 CREATE POLICY "Store org members can select products"
   ON products FOR SELECT
   USING (

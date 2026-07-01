@@ -1,13 +1,4 @@
--- Security hardening migration:
---   1. Lock products.is_published on INSERT for staff (companion to 010).
---   2. claim_employee_invite RPC so an *already authenticated* user can link
---      a pending invite to their account themselves — without an Edge Function
---      ever touching their password. Closes the silent-password-overwrite path
---      in claim-employee-signup.
-
--- ============================================================
--- STEP 1: Staff cannot publish on INSERT either
--- ============================================================
+-- Staff publish lock + claim_employee_invite RPC
 
 CREATE OR REPLACE FUNCTION public.products_lock_is_published_for_staff_insert()
 RETURNS TRIGGER
@@ -37,15 +28,6 @@ CREATE TRIGGER products_lock_is_published_for_staff_insert
   BEFORE INSERT ON products
   FOR EACH ROW
   EXECUTE PROCEDURE public.products_lock_is_published_for_staff_insert();
-
--- ============================================================
--- STEP 2: claim_employee_invite RPC
---
--- Authenticated users only. The RPC trusts auth.uid() / auth.email() —
--- which Supabase derives from the bearer JWT — instead of taking the
--- email as an argument, so an attacker can't claim an invite that
--- doesn't belong to their session.
--- ============================================================
 
 CREATE OR REPLACE FUNCTION public.claim_employee_invite(
   p_store_name text,
@@ -89,7 +71,6 @@ BEGIN
   LIMIT 1;
 
   IF v_store_id IS NULL THEN
-    -- Generic message — never reveal which of (store, employee, email) was wrong.
     RETURN jsonb_build_object('ok', false, 'error', 'Invalid store, Employee ID, or email');
   END IF;
 
@@ -104,7 +85,6 @@ BEGIN
     RETURN jsonb_build_object('ok', false, 'error', 'Invalid store, Employee ID, or email');
   END IF;
 
-  -- Idempotent — if they're already linked, succeed silently.
   INSERT INTO store_admins (store_id, user_id, role, employee_id, display_name)
   VALUES (
     v_store_id,

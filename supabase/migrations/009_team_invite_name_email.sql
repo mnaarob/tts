@@ -1,5 +1,3 @@
--- Manager-provided name + email on invites; display_name on members; email-bound signup.
-
 ALTER TABLE store_invites ADD COLUMN IF NOT EXISTS full_name text;
 
 ALTER TABLE store_admins ADD COLUMN IF NOT EXISTS display_name text;
@@ -44,5 +42,4 @@ AS $$
   ORDER BY au.created_at;
 $$;
 
--- Refresh PostgREST schema cache so the API sees new columns immediately.
 NOTIFY pgrst, 'reload schema';

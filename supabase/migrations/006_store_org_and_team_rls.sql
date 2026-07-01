@@ -1,20 +1,14 @@
--- Link each store row to the inventory organization (UUID) so team members use the same
--- organization_id as products/categories. Also extend RLS so store_admins members can
--- read/write inventory for that org (not only the org owner).
+-- Store org link + team RLS
 
 ALTER TABLE stores
   ADD COLUMN IF NOT EXISTS organization_id uuid REFERENCES organizations(id) ON DELETE SET NULL;
 
--- Backfill: any user who is both in store_admins for this store and owns an organization
--- gets that org linked to the store (typical owner setup).
 UPDATE stores s
 SET organization_id = o.id
 FROM store_admins sa
 JOIN organizations o ON o.owner_id = sa.user_id
 WHERE sa.store_id = s.id
   AND s.organization_id IS NULL;
-
--- --- RLS: products, categories, stock_movements ---
 
 DROP POLICY IF EXISTS "Users can manage categories in own org" ON categories;
 DROP POLICY IF EXISTS "Users can manage categories in their store org" ON categories;
@@ -85,7 +79,6 @@ CREATE POLICY "Users can manage stock in their store org"
     )
   );
 
--- Team members can read the organization row linked to their store (optional UI / joins)
 DROP POLICY IF EXISTS "Store members can view linked organization" ON organizations;
 CREATE POLICY "Store members can view linked organization"
   ON organizations FOR SELECT

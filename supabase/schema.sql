@@ -1,10 +1,5 @@
--- Tech to Store - Supabase Schema
--- Run this in Supabase Dashboard > SQL Editor
-
--- Enable UUID extension
 create extension if not exists "uuid-ossp";
 
--- Organizations (one per store/business)
 create table organizations (
   id uuid primary key default uuid_generate_v4(),
   name text not null,
@@ -13,7 +8,6 @@ create table organizations (
   updated_at timestamptz default now()
 );
 
--- Categories (belong to organization)
 create table categories (
   id uuid primary key default uuid_generate_v4(),
   organization_id uuid references organizations(id) on delete cascade not null,
@@ -22,7 +16,6 @@ create table categories (
   unique(organization_id, name)
 );
 
--- Products (belong to organization, optional category)
 create table products (
   id uuid primary key default uuid_generate_v4(),
   organization_id uuid references organizations(id) on delete cascade not null,
@@ -39,7 +32,6 @@ create table products (
   updated_at timestamptz default now()
 );
 
--- Stock movements (for audit trail)
 create table stock_movements (
   id uuid primary key default uuid_generate_v4(),
   product_id uuid references products(id) on delete cascade not null,
@@ -50,13 +42,11 @@ create table stock_movements (
   created_at timestamptz default now()
 );
 
--- Row Level Security
 alter table organizations enable row level security;
 alter table categories enable row level security;
 alter table products enable row level security;
 alter table stock_movements enable row level security;
 
--- Organizations: users can only access their own
 create policy "Users can view own organizations"
   on organizations for select
   using (auth.uid() = owner_id);
@@ -69,7 +59,6 @@ create policy "Users can update own organizations"
   on organizations for update
   using (auth.uid() = owner_id);
 
--- Categories: users can access categories of their organizations
 create policy "Users can manage categories in own org"
   on categories for all
   using (
@@ -79,7 +68,6 @@ create policy "Users can manage categories in own org"
     organization_id in (select id from organizations where owner_id = auth.uid())
   );
 
--- Products: same as categories
 create policy "Users can manage products in own org"
   on products for all
   using (
@@ -89,7 +77,6 @@ create policy "Users can manage products in own org"
     organization_id in (select id from organizations where owner_id = auth.uid())
   );
 
--- Stock movements
 create policy "Users can manage stock in own org"
   on stock_movements for all
   using (
@@ -98,6 +85,3 @@ create policy "Users can manage stock in own org"
   with check (
     organization_id in (select id from organizations where owner_id = auth.uid())
   );
-
--- Note: Organizations are created in the app when user first signs in (see useOrganization hook).
--- This avoids auth trigger issues that can cause signup 500 errors.

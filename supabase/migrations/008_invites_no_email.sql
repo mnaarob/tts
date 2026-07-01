@@ -1,5 +1,3 @@
--- Employee self-signup: invites keyed by store + employee_id (email optional until signup).
-
 DROP INDEX IF EXISTS store_invites_store_email_lower_idx;
 
 CREATE UNIQUE INDEX IF NOT EXISTS store_invites_store_employee_idx
@@ -20,7 +18,6 @@ CREATE POLICY "store_managers_insert_invites"
     )
   );
 
--- Avoid generating an ID that is already reserved in pending invites.
 CREATE OR REPLACE FUNCTION generate_employee_id(p_store_id text)
 RETURNS char(6)
 LANGUAGE plpgsql

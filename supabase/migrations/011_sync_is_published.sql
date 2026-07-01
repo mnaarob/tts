@@ -1,23 +1,9 @@
--- Sync is_published between inventory (tts) and website (milladweb).
---
--- 1. Backfill: every product already visible on the website (has a store_id)
---    gets is_published = true to match reality.
--- 2. Trigger: when is_published flips to true and store_id is null,
---    auto-populate store_id from the stores table via organization_id.
---    This lets the inventory app publish products without knowing store_id.
-
--- ============================================================
--- STEP 1: Backfill — mark existing website products as published
--- ============================================================
+-- is_published sync + store_id on publish
 
 UPDATE products
 SET is_published = true
 WHERE store_id IS NOT NULL
   AND is_published IS DISTINCT FROM true;
-
--- ============================================================
--- STEP 2: Trigger — auto-link store_id when publishing
--- ============================================================
 
 CREATE OR REPLACE FUNCTION public.sync_store_id_on_publish()
 RETURNS TRIGGER

@@ -1,34 +1,7 @@
-/**
- * claim-employee-signup — Employee self-registration using store name +
- * pending-invite employee_id.
- *
- * Behaviour:
- *  - If no Auth user exists for the supplied email yet, create one
- *    (email_confirm = true since the manager already vouches for the
- *    address by entering it on the invite) and link store_admins.
- *  - If an Auth user *already* exists for that email, this function
- *    deliberately refuses to create / overwrite credentials. It returns
- *    `code: "account_exists"` so the client can ask the user to sign in
- *    with their real password and finish the link via the
- *    `claim_employee_invite` RPC. This closes the account-takeover path
- *    where anyone with (store_name, employee_id, email) could reset the
- *    user's password.
- *
- * Required secrets: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
- * Optional secrets:
- *   TURNSTILE_SECRET_KEY  — when set, CAPTCHA is required.
- *   ALLOWED_ORIGINS       — comma-separated allow-list (e.g.
- *                           "https://app.example.com,https://staging.example.com").
- *                           Falls back to "*" only when unset, which is
- *                           appropriate for early local dev.
- *
- * Deploy: supabase functions deploy claim-employee-signup
- */
+/** Employee signup from pending store invite. Deploy: supabase functions deploy claim-employee-signup */
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
 
-// Generic, identical-looking error so we never tell an attacker which of
-// (store, employee_id, email) was wrong.
 const GENERIC_INVITE_ERROR =
   'Invalid store name, Employee ID, or email. Ask your manager to verify your invite.';
 
@@ -41,12 +14,10 @@ function buildCorsHeaders(req: Request): Record<string, string> {
   const origin = req.headers.get('origin') ?? '';
   let allow: string;
   if (ALLOWED_ORIGINS.length === 0) {
-    allow = '*'; // dev fallback only
+    allow = '*';
   } else if (ALLOWED_ORIGINS.includes(origin)) {
     allow = origin;
   } else {
-    // Pick the first allow-listed origin as the canonical value so browsers
-    // still get a meaningful preflight response when called from elsewhere.
     allow = ALLOWED_ORIGINS[0];
   }
   return {
@@ -85,12 +56,11 @@ function isEmailAlreadyRegisteredError(msg: string | undefined): boolean {
   );
 }
 
-/** Escape PostgREST ilike wildcards so a value like '%' can't match every row. */
+/** Escape PostgREST ilike wildcards. */
 function escapeLikePattern(value: string): string {
   return value.replace(/([\\%_])/g, '\\$1');
 }
 
-/** Email validation. Loose RFC-5322-ish — fully validating against RFC is impractical and Auth re-checks. */
 function isPlausibleEmail(email: string): boolean {
   if (email.length > 254) return false;
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -166,7 +136,6 @@ serve(async (req) => {
     if (!isPlausibleEmail(email)) {
       return errResponse(GENERIC_INVITE_ERROR, cors);
     }
-    // Match the client-side policy. Real validation lives in Supabase Auth.
     if (password.length < 8 || password.length > 128) {
       return errResponse('Password must be at least 8 characters.', cors);
     }
@@ -189,8 +158,6 @@ serve(async (req) => {
         return errResponse('CAPTCHA verification failed', cors);
       }
     } else {
-      // Loud warning — running this endpoint open to the internet without
-      // CAPTCHA + rate limiting is a brute-force invite for credential stuffing.
       console.warn('claim-employee-signup running without TURNSTILE_SECRET_KEY');
     }
 
@@ -207,7 +174,6 @@ serve(async (req) => {
 
     if (storeErr) {
       console.error('stores', storeErr);
-      // Don't leak which step failed.
       return errResponse(GENERIC_INVITE_ERROR, cors);
     }
     if (!store?.id) {
@@ -247,13 +213,6 @@ serve(async (req) => {
     });
 
     if (createErr && isEmailAlreadyRegisteredError(createErr.message)) {
-      // === SECURITY: refuse to overwrite an existing account ===
-      // We used to silently change the existing account's password and link
-      // store_admins right here. That meant anyone with the right invite
-      // (which a malicious manager can create) could permanently lock the
-      // real owner out of an unrelated account. We now stop here and let
-      // the *authenticated* user finish linking via the
-      // `claim_employee_invite` RPC after a normal sign-in.
       return json(
         {
           ok: false,
@@ -273,7 +232,6 @@ serve(async (req) => {
       userId = created.user.id;
       deleteUserOnRollback = true;
     } else if (createErr) {
-      // Some other createUser error — keep messages internal so we don't leak details.
       console.error('createUser', createErr);
       return errResponse('Could not create account. Please try again.', cors, 'server_error');
     } else {
@@ -281,8 +239,6 @@ serve(async (req) => {
       return errResponse('Could not create account. Please try again.', cors, 'server_error');
     }
 
-    // Belt and braces: even though we just created the user, double-check
-    // they aren't already a member (concurrent retry, etc.).
     const { data: alreadyMember } = await admin
       .from('store_admins')
       .select('user_id')
@@ -291,7 +247,6 @@ serve(async (req) => {
       .maybeSingle();
 
     if (alreadyMember) {
-      // Don't roll back the user — they exist and are already in the store.
       return json({ ok: true, message: 'Already linked' }, 200, cors);
     }
 

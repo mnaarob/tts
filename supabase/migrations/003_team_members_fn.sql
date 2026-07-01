@@ -1,6 +1,3 @@
--- Returns all members of a store with their email, name, role, employee_id from auth.users.
--- SECURITY DEFINER allows joining auth.users (not accessible to anon/authenticated roles directly).
--- The EXISTS check ensures the caller is themselves a member of the requested store.
 CREATE OR REPLACE FUNCTION get_store_team(p_store_id text)
 RETURNS TABLE (
   user_id     uuid,
