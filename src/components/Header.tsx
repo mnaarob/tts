@@ -29,18 +29,26 @@ export function Header() {
   }];
 
   function scrollToSection(id: string) {
-    const el = document.getElementById(id);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
+    const doScroll = () => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const top = el.getBoundingClientRect().top + window.scrollY - 80;
+      window.scrollTo({ top, behavior: 'smooth' });
+    };
+
+    if (document.getElementById(id)) {
+      doScroll();
       return;
     }
     if (location.pathname !== '/') {
       navigate('/');
-      window.setTimeout(() => {
-        const target = document.getElementById(id);
-        target?.scrollIntoView({ behavior: 'smooth' });
-      }, 80);
+      window.setTimeout(doScroll, 150);
     }
+  }
+
+  function handleMobileNavClick(target: string) {
+    setIsMobileMenuOpen(false);
+    window.setTimeout(() => scrollToSection(target), 200);
   }
 
   return (
@@ -137,10 +145,7 @@ export function Header() {
               type="button"
               key={link.name}
               className="text-base font-medium text-slate-600 hover:text-blue-900 py-2 text-left bg-transparent border-none p-0 cursor-pointer"
-              onClick={() => {
-                setIsMobileMenuOpen(false);
-                scrollToSection(link.target);
-              }}>
+              onClick={() => handleMobileNavClick(link.target)}>
 
                   {link.name}
                 </button>
