@@ -125,7 +125,7 @@ type StoreInviteRow = {
 
 const ROLE_BADGE: Record<string, string> = {
   owner:     'bg-indigo-100 text-indigo-700',
-  manager:   'bg-blue-100 text-blue-700',
+  manager:   'bg-charcoal/10 text-charcoal',
   staff:     'bg-slate-100 text-slate-600',
   developer: 'bg-violet-100 text-violet-700',
 };
@@ -849,14 +849,14 @@ export function InventoryDashboard() {
 
   if (orgLoading || !organization) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-900" />
+      <div className="min-h-screen bg-paper flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-crimson" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 lg:bg-slate-50">
+    <div className="min-h-screen bg-paper">
       {/* Top Header - Tech to Store left, org + Sign out right */}
       <header className="bg-white border-b border-slate-200/80 sticky top-0 z-40 shadow-sm safe-area-top">
         <div className="flex justify-between items-center h-14 sm:h-16 px-4 sm:px-6 lg:px-8 w-full">
@@ -870,7 +870,7 @@ export function InventoryDashboard() {
             </button>
             <Link to="/" className="flex items-center gap-2 group min-w-0">
               <Logo className="w-8 h-8 text-slate-900 flex-shrink-0 group-hover:text-slate-700 transition-colors" />
-              <span className="font-semibold text-slate-900 truncate">Tech to Store</span>
+              <span className="font-semibold text-slate-900 truncate">tech to store</span>
             </Link>
           </div>
           <div className="flex items-center gap-3 sm:gap-4 flex-shrink-0">
@@ -912,11 +912,11 @@ export function InventoryDashboard() {
                 }}
                 className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all min-h-[48px] ${
                   activeTab === link.name
-                    ? 'bg-blue-50 text-blue-700 shadow-sm'
+                    ? 'bg-crimson/10 text-crimson shadow-sm'
                     : 'text-slate-600 hover:bg-slate-50 active:bg-slate-100 text-slate-900'
                 }`}
               >
-                <link.icon className={`w-5 h-5 flex-shrink-0 ${activeTab === link.name ? 'text-blue-600' : ''}`} />
+                <link.icon className={`w-5 h-5 flex-shrink-0 ${activeTab === link.name ? 'text-crimson' : ''}`} />
                 {link.name}
               </button>
             ))}
@@ -1018,13 +1018,13 @@ export function InventoryDashboard() {
                           placeholder="Search or scan a product..."
                           value={dashboardSearchQuery}
                           onChange={(e) => setDashboardSearchQuery(e.target.value)}
-                          className="w-full pl-10 pr-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-slate-50/50"
+                          className="w-full pl-10 pr-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-crimson/20 focus:border-crimson bg-slate-50/50"
                         />
                       </div>
                       <button
                         type="button"
                         onClick={openScannerForLookup}
-                        className="flex-shrink-0 inline-flex items-center justify-center min-h-[44px] min-w-[44px] w-11 h-11 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-500 hover:text-blue-600 hover:bg-blue-50 active:bg-blue-100 transition-colors touch-manipulation"
+                        className="flex-shrink-0 inline-flex items-center justify-center min-h-[44px] min-w-[44px] w-11 h-11 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-500 hover:text-crimson hover:bg-crimson/10 active:bg-crimson/15 transition-colors touch-manipulation"
                         aria-label="Scan a product barcode"
                         title="Scan a product"
                       >
@@ -1034,7 +1034,7 @@ export function InventoryDashboard() {
                     <div className="flex gap-2">
                       <button
                         onClick={openScannerForAdd}
-                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl text-sm font-medium transition-colors min-h-[44px] shadow-sm touch-manipulation"
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-charcoal hover:bg-ink active:bg-ink text-white rounded-xl text-sm font-medium transition-colors min-h-[44px] shadow-sm touch-manipulation"
                       >
                         <Scan className="w-4 h-4" />
                         Scan to add
@@ -1046,7 +1046,7 @@ export function InventoryDashboard() {
                           setAddModalLookupLoading(false);
                           setAddModalOpen(true);
                         }}
-                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white rounded-xl text-sm font-medium transition-colors min-h-[44px] shadow-sm touch-manipulation"
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-crimson hover:bg-crimson-hover active:bg-crimson-hover text-white rounded-xl text-sm font-medium transition-colors min-h-[44px] shadow-sm touch-manipulation"
                       >
                         <Plus className="w-4 h-4" />
                         Add Product
@@ -1113,7 +1113,7 @@ export function InventoryDashboard() {
                               <button
                                 type="button"
                                 onClick={() => void openProductForEdit(product)}
-                                className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-1 min-h-[44px]"
+                                className="text-crimson hover:text-crimson-hover text-sm font-medium flex items-center gap-1 min-h-[44px]"
                               >
                                 Edit <ChevronRight className="w-4 h-4" />
                               </button>
@@ -1155,7 +1155,7 @@ export function InventoryDashboard() {
                           <button
                             type="button"
                             onClick={() => void openProductForEdit(product)}
-                            className="flex-shrink-0 flex items-center gap-1 px-3 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 active:bg-blue-200 rounded-xl text-sm font-medium min-h-[44px] transition-colors"
+                            className="flex-shrink-0 flex items-center gap-1 px-3 py-2 bg-crimson/10 text-crimson hover:bg-crimson/15 active:bg-crimson/20 rounded-xl text-sm font-medium min-h-[44px] transition-colors"
                           >
                             Edit <ChevronRight className="w-4 h-4" />
                           </button>
@@ -1189,13 +1189,13 @@ export function InventoryDashboard() {
                           placeholder="Search or scan a product..."
                           value={productSearchQuery}
                           onChange={(e) => setProductSearchQuery(e.target.value)}
-                          className="w-full pl-10 pr-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-slate-50/50"
+                          className="w-full pl-10 pr-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-crimson/20 focus:border-crimson bg-slate-50/50"
                         />
                       </div>
                       <button
                         type="button"
                         onClick={openScannerForLookup}
-                        className="flex-shrink-0 inline-flex items-center justify-center min-h-[44px] min-w-[44px] w-11 h-11 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-500 hover:text-blue-600 hover:bg-blue-50 active:bg-blue-100 transition-colors touch-manipulation"
+                        className="flex-shrink-0 inline-flex items-center justify-center min-h-[44px] min-w-[44px] w-11 h-11 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-500 hover:text-crimson hover:bg-crimson/10 active:bg-crimson/15 transition-colors touch-manipulation"
                         aria-label="Scan a product barcode"
                         title="Scan a product"
                       >
@@ -1205,7 +1205,7 @@ export function InventoryDashboard() {
                     <select
                       value={productCategoryFilterId ?? ''}
                       onChange={(e) => setProductCategoryFilterId(e.target.value || null)}
-                      className="px-4 py-2.5 border border-slate-200 rounded-xl text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20 bg-slate-50/50 min-h-[44px]"
+                      className="px-4 py-2.5 border border-slate-200 rounded-xl text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-crimson/20 bg-paper/50 min-h-[44px]"
                       aria-label="Filter by category"
                     >
                       <option value="">All Categories</option>
@@ -1218,7 +1218,7 @@ export function InventoryDashboard() {
                     <div className="flex gap-2">
                       <button
                         onClick={openScannerForAdd}
-                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium min-h-[44px] shadow-sm touch-manipulation"
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-charcoal hover:bg-ink text-white rounded-xl text-sm font-medium min-h-[44px] shadow-sm touch-manipulation"
                       >
                         <Scan className="w-4 h-4" />
                         Scan
@@ -1230,7 +1230,7 @@ export function InventoryDashboard() {
                           setAddModalLookupLoading(false);
                           setAddModalOpen(true);
                         }}
-                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-medium min-h-[44px] shadow-sm touch-manipulation"
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-crimson hover:bg-crimson-hover text-white rounded-xl text-sm font-medium min-h-[44px] shadow-sm touch-manipulation"
                       >
                         <Plus className="w-4 h-4" />
                         Add
@@ -1297,7 +1297,7 @@ export function InventoryDashboard() {
                               <button
                                 type="button"
                                 onClick={() => void openProductForEdit(product)}
-                                className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-1"
+                                className="text-crimson hover:text-crimson-hover text-sm font-medium flex items-center gap-1"
                               >
                                 Edit <ChevronRight className="w-4 h-4" />
                               </button>
@@ -1339,7 +1339,7 @@ export function InventoryDashboard() {
                           <button
                             type="button"
                             onClick={() => void openProductForEdit(product)}
-                            className="flex-shrink-0 flex items-center gap-1 px-3 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 active:bg-blue-200 rounded-xl text-sm font-medium min-h-[44px] transition-colors"
+                            className="flex-shrink-0 flex items-center gap-1 px-3 py-2 bg-crimson/10 text-crimson hover:bg-crimson/15 active:bg-crimson/20 rounded-xl text-sm font-medium min-h-[44px] transition-colors"
                           >
                             Edit <ChevronRight className="w-4 h-4" />
                           </button>
@@ -1369,7 +1369,7 @@ export function InventoryDashboard() {
                     setCategoryModalError(null);
                     setCategoryModal({ id: null, name: '' });
                   }}
-                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-medium min-h-[44px] shadow-sm cursor-pointer"
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-crimson hover:bg-crimson-hover text-white rounded-xl text-sm font-medium min-h-[44px] shadow-sm cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
                   Add Category
@@ -1396,7 +1396,7 @@ export function InventoryDashboard() {
                           setCategoryModalError(null);
                           setCategoryModal({ id: cat.id, name: cat.name });
                         }}
-                        className="text-sm text-blue-600 hover:text-blue-800 font-medium min-h-[44px] min-w-[44px] px-1 cursor-pointer"
+                        className="text-sm text-crimson hover:text-crimson-hover font-medium min-h-[44px] min-w-[44px] px-1 cursor-pointer"
                       >
                         Edit
                       </button>
@@ -1526,7 +1526,7 @@ export function InventoryDashboard() {
                 <div className="bg-white rounded-xl border border-slate-200 p-6">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="p-2 bg-blue-100 rounded-lg">
-                      <BarChart3 className="w-6 h-6 text-blue-600" />
+                      <BarChart3 className="w-6 h-6 text-crimson" />
                     </div>
                     <h2 className="font-semibold text-slate-900">Inventory Value</h2>
                   </div>
@@ -1555,7 +1555,7 @@ export function InventoryDashboard() {
                       </div>
                       <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-blue-500 rounded-full"
+                          className="h-full bg-crimson rounded-full"
                           style={{ width: `${Math.max(5, (cat.productCount / Math.max(1, products.length)) * 100)}%` }}
                         />
                       </div>
@@ -1599,7 +1599,7 @@ export function InventoryDashboard() {
                           placeholder="Employee name"
                           value={inviteName}
                           onChange={(e) => setInviteName(e.target.value)}
-                          className="w-full pl-10 pr-4 py-2.5 min-h-[44px] border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-slate-50/50"
+                          className="w-full pl-10 pr-4 py-2.5 min-h-[44px] border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-crimson/20 focus:border-crimson bg-slate-50/50"
                         />
                       </div>
                       <div className="relative">
@@ -1611,7 +1611,7 @@ export function InventoryDashboard() {
                           placeholder="Employee email"
                           value={inviteEmail}
                           onChange={(e) => setInviteEmail(e.target.value)}
-                          className="w-full pl-10 pr-4 py-2.5 min-h-[44px] border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-slate-50/50"
+                          className="w-full pl-10 pr-4 py-2.5 min-h-[44px] border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-crimson/20 focus:border-crimson bg-slate-50/50"
                         />
                       </div>
                     </div>
@@ -1620,7 +1620,7 @@ export function InventoryDashboard() {
                         <select
                           value={inviteRole}
                           onChange={(e) => setInviteRole(e.target.value as 'manager' | 'staff')}
-                          className="appearance-none w-full sm:w-40 px-4 pr-9 py-2.5 min-h-[44px] border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-slate-50/50"
+                          className="appearance-none w-full sm:w-40 px-4 pr-9 py-2.5 min-h-[44px] border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-crimson/20 focus:border-crimson bg-slate-50/50"
                         >
                           <option value="manager">Manager</option>
                           <option value="staff">Staff</option>
@@ -1630,7 +1630,7 @@ export function InventoryDashboard() {
                       <button
                         type="submit"
                         disabled={inviteLoading}
-                        className="flex items-center justify-center gap-2 px-5 py-2.5 min-h-[44px] bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl text-sm font-medium transition-colors disabled:opacity-50 shadow-sm"
+                        className="flex items-center justify-center gap-2 px-5 py-2.5 min-h-[44px] bg-charcoal hover:bg-ink active:bg-ink text-white rounded-xl text-sm font-medium transition-colors disabled:opacity-50 shadow-sm"
                       >
                         {inviteLoading ? 'Adding…' : 'Add Member'}
                       </button>
@@ -1688,7 +1688,7 @@ export function InventoryDashboard() {
                   </div>
                   {pendingInvitesLoading ? (
                     <div className="flex items-center justify-center py-10">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-crimson" />
                     </div>
                   ) : pendingInvites.length === 0 ? (
                     <div className="py-8 text-center text-slate-500 text-sm">No pending invites.</div>
@@ -1704,7 +1704,7 @@ export function InventoryDashboard() {
                               <p className="font-medium text-slate-900 truncate">
                                 {inv.full_name?.trim() || 'Pending'}
                               </p>
-                              <span className="font-mono text-sm font-bold text-blue-900 tracking-widest bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-100">
+                              <span className="font-mono text-sm font-bold text-ink tracking-widest bg-paper px-2 py-0.5 rounded-lg border border-line">
                                 ID {inv.employee_id}
                               </span>
                             </div>
@@ -1750,7 +1750,7 @@ export function InventoryDashboard() {
                 <div className="hidden md:block overflow-x-auto">
                   {teamLoading ? (
                     <div className="flex items-center justify-center py-12">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-crimson" />
                     </div>
                   ) : teamMembers.length === 0 ? (
                     <div className="py-12 text-center text-slate-500 text-sm">No team members yet.</div>
@@ -1836,7 +1836,7 @@ export function InventoryDashboard() {
                 <div className="md:hidden divide-y divide-slate-100">
                   {teamLoading ? (
                     <div className="flex items-center justify-center py-12">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-crimson" />
                     </div>
                   ) : teamMembers.length === 0 ? (
                     <div className="py-12 text-center text-slate-500 text-sm">No team members yet.</div>
@@ -1936,7 +1936,7 @@ export function InventoryDashboard() {
                 }
               }}
               placeholder="Category name"
-              className="mt-4 w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              className="mt-4 w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-crimson/20 focus:border-crimson"
               autoFocus
             />
             {categoryModalError && (
@@ -1954,7 +1954,7 @@ export function InventoryDashboard() {
                 type="button"
                 disabled={categorySaving}
                 onClick={() => void handleSaveCategory()}
-                className="px-4 py-2.5 rounded-xl text-sm font-medium text-white bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 min-h-[44px]"
+                className="px-4 py-2.5 rounded-xl text-sm font-medium text-white bg-crimson hover:bg-crimson-hover disabled:opacity-50 min-h-[44px]"
               >
                 {categorySaving ? 'Saving…' : 'Save'}
               </button>
@@ -2049,7 +2049,7 @@ export function InventoryDashboard() {
           aria-live="polite"
           className="fixed bottom-[calc(env(safe-area-inset-bottom,0)+1rem)] right-4 z-50 max-w-sm bg-white border border-slate-200 text-slate-700 px-4 py-3 rounded-xl shadow-lg text-sm flex items-center gap-2"
         >
-          <span className="inline-block h-3 w-3 rounded-full border-2 border-slate-300 border-t-blue-600 animate-spin" />
+          <span className="inline-block h-3 w-3 rounded-full border-2 border-slate-300 border-t-crimson animate-spin" />
           Looking up product…
         </div>
       )}

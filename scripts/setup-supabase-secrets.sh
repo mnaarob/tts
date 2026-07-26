@@ -32,11 +32,26 @@ supabase secrets set "ALLOWED_ORIGINS=$ORIGINS" --project-ref "$REF"
 if [ -n "${TURNSTILE_SECRET_KEY:-}" ]; then
   echo "Setting TURNSTILE_SECRET_KEY..."
   supabase secrets set "TURNSTILE_SECRET_KEY=$TURNSTILE_SECRET_KEY" --project-ref "$REF"
-  echo "Done — employee signup edge function will verify CAPTCHA server-side."
+  echo "Done — employee signup / contact form will verify CAPTCHA server-side."
 else
   echo ""
   echo "TURNSTILE_SECRET_KEY not set in $ENV_FILE."
   echo "Add it (from Cloudflare Turnstile / Supabase Auth CAPTCHA settings), then re-run:"
   echo "  bash scripts/setup-supabase-secrets.sh"
   exit 1
+fi
+
+if [ -n "${SMTP_USER:-}" ] && [ -n "${SMTP_PASS:-}" ]; then
+  echo "Setting Namecheap SMTP secrets for contact-form..."
+  supabase secrets set \
+    "SMTP_HOST=${SMTP_HOST:-mail.privateemail.com}" \
+    "SMTP_PORT=${SMTP_PORT:-465}" \
+    "SMTP_USER=$SMTP_USER" \
+    "SMTP_PASS=$SMTP_PASS" \
+    "CONTACT_TO=${CONTACT_TO:-contact@techtostore.com}" \
+    --project-ref "$REF"
+  echo "Done — contact form can deliver to CONTACT_TO."
+else
+  echo ""
+  echo "SMTP_USER / SMTP_PASS not set — contact form email delivery will not work until you add them."
 fi

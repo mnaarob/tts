@@ -25,17 +25,17 @@ export function CheckoutPage() {
   const currentPlan =
   plans[selectedPlan as keyof typeof plans] || plans.professional;
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-paper">
       {/* Simple Header */}
-      <header className="bg-white border-b border-slate-200 py-4">
+      <header className="bg-white border-b border-line py-4">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
           <Link to="/" className="flex items-center gap-2 group">
-            <Logo className="w-9 h-9 text-slate-900 group-hover:text-slate-700 transition-colors" />
-            <span className="font-bold text-xl tracking-tight text-slate-900">
+            <Logo className="w-9 h-9 text-ink group-hover:text-ink/80 transition-colors" />
+            <span className="font-bold text-xl tracking-tight text-ink">
               Tech to Store
             </span>
           </Link>
-          <div className="flex items-center gap-2 text-sm text-slate-500">
+          <div className="flex items-center gap-2 text-sm text-muted">
             <Lock className="w-4 h-4" />
             <span>Secure Checkout</span>
           </div>
@@ -46,7 +46,7 @@ export function CheckoutPage() {
         <div className="mb-8">
           <Link
             to="/"
-            className="inline-flex items-center text-sm text-slate-600 hover:text-blue-900 transition-colors">
+            className="inline-flex items-center text-sm text-muted hover:text-crimson transition-colors">
 
             <ArrowLeft className="w-4 h-4 mr-1" />
             Back to Home
@@ -69,15 +69,15 @@ export function CheckoutPage() {
                 duration: 0.5
               }}>
 
-              <h1 className="text-3xl font-bold text-slate-900 mb-2">
+              <h1 className="text-3xl font-bold text-ink mb-2">
                 Finalize Your Order
               </h1>
-              <p className="text-slate-600 mb-8">
+              <p className="text-muted mb-8">
                 Complete your details below to get started with Tech to Store.
               </p>
 
-              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6">
-                <h2 className="text-xl font-semibold text-slate-900 mb-4">
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-line space-y-6">
+                <h2 className="text-xl font-semibold text-ink mb-4">
                   Business Information
                 </h2>
 
@@ -85,28 +85,28 @@ export function CheckoutPage() {
                   <div className="space-y-2">
                     <label
                       htmlFor="firstName"
-                      className="block text-sm font-medium text-slate-700">
+                      className="block text-sm font-medium text-ink/80">
 
                       First Name
                     </label>
                     <input
                       type="text"
                       id="firstName"
-                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                      className="w-full px-4 py-2 border border-line rounded-lg focus:ring-2 focus:ring-crimson/30 focus:border-crimson outline-none transition-all"
                       placeholder="John" />
 
                   </div>
                   <div className="space-y-2">
                     <label
                       htmlFor="lastName"
-                      className="block text-sm font-medium text-slate-700">
+                      className="block text-sm font-medium text-ink/80">
 
                       Last Name
                     </label>
                     <input
                       type="text"
                       id="lastName"
-                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                      className="w-full px-4 py-2 border border-line rounded-lg focus:ring-2 focus:ring-crimson/30 focus:border-crimson outline-none transition-all"
                       placeholder="Doe" />
 
                   </div>
@@ -115,14 +115,14 @@ export function CheckoutPage() {
                 <div className="space-y-2">
                   <label
                     htmlFor="businessName"
-                    className="block text-sm font-medium text-slate-700">
+                    className="block text-sm font-medium text-ink/80">
 
                     Business Name
                   </label>
                   <input
                     type="text"
                     id="businessName"
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                    className="w-full px-4 py-2 border border-line rounded-lg focus:ring-2 focus:ring-crimson/30 focus:border-crimson outline-none transition-all"
                     placeholder="Your Store Name" />
 
                 </div>
@@ -130,14 +130,14 @@ export function CheckoutPage() {
                 <div className="space-y-2">
                   <label
                     htmlFor="email"
-                    className="block text-sm font-medium text-slate-700">
+                    className="block text-sm font-medium text-ink/80">
 
                     Email Address
                   </label>
                   <input
                     type="email"
                     id="email"
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                    className="w-full px-4 py-2 border border-line rounded-lg focus:ring-2 focus:ring-crimson/30 focus:border-crimson outline-none transition-all"
                     placeholder="john@example.com" />
 
                 </div>
@@ -145,31 +145,31 @@ export function CheckoutPage() {
                 <div className="space-y-2">
                   <label
                     htmlFor="phone"
-                    className="block text-sm font-medium text-slate-700">
+                    className="block text-sm font-medium text-ink/80">
 
                     Phone Number
                   </label>
                   <input
                     type="tel"
                     id="phone"
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                    className="w-full px-4 py-2 border border-line rounded-lg focus:ring-2 focus:ring-crimson/30 focus:border-crimson outline-none transition-all"
                     placeholder="(204) 555-0123" />
 
                 </div>
               </div>
 
-              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6 mt-6">
-                <h2 className="text-xl font-semibold text-slate-900 mb-4">
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-line space-y-6 mt-6">
+                <h2 className="text-xl font-semibold text-ink mb-4">
                   Payment Details
                 </h2>
 
-                <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg flex items-start gap-3 mb-6">
-                  <CreditCard className="w-5 h-5 text-blue-600 mt-0.5" />
+                <div className="p-4 bg-paper border border-line rounded-lg flex items-start gap-3 mb-6">
+                  <CreditCard className="w-5 h-5 text-crimson mt-0.5" />
                   <div>
-                    <h3 className="font-medium text-blue-900">
+                    <h3 className="font-medium text-ink">
                       Secure Payment
                     </h3>
-                    <p className="text-sm text-blue-700">
+                    <p className="text-sm text-muted">
                       Your payment information is encrypted and secure. We never
                       store your credit card details.
                     </p>
@@ -180,14 +180,14 @@ export function CheckoutPage() {
                   <div className="space-y-2">
                     <label
                       htmlFor="cardNumber"
-                      className="block text-sm font-medium text-slate-700">
+                      className="block text-sm font-medium text-ink/80">
 
                       Card Number
                     </label>
                     <input
                       type="text"
                       id="cardNumber"
-                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                      className="w-full px-4 py-2 border border-line rounded-lg focus:ring-2 focus:ring-crimson/30 focus:border-crimson outline-none transition-all"
                       placeholder="0000 0000 0000 0000" />
 
                   </div>
@@ -196,28 +196,28 @@ export function CheckoutPage() {
                     <div className="space-y-2">
                       <label
                         htmlFor="expiry"
-                        className="block text-sm font-medium text-slate-700">
+                        className="block text-sm font-medium text-ink/80">
 
                         Expiry Date
                       </label>
                       <input
                         type="text"
                         id="expiry"
-                        className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                        className="w-full px-4 py-2 border border-line rounded-lg focus:ring-2 focus:ring-crimson/30 focus:border-crimson outline-none transition-all"
                         placeholder="MM/YY" />
 
                     </div>
                     <div className="space-y-2">
                       <label
                         htmlFor="cvc"
-                        className="block text-sm font-medium text-slate-700">
+                        className="block text-sm font-medium text-ink/80">
 
                         CVC
                       </label>
                       <input
                         type="text"
                         id="cvc"
-                        className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                        className="w-full px-4 py-2 border border-line rounded-lg focus:ring-2 focus:ring-crimson/30 focus:border-crimson outline-none transition-all"
                         placeholder="123" />
 
                     </div>
@@ -225,11 +225,11 @@ export function CheckoutPage() {
                 </div>
               </div>
 
-              <button className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-emerald-500/20 transition-all hover:-translate-y-1 mt-8">
+              <button className="btn-primary w-full py-4 text-lg mt-8">
                 Complete Order (${currentPlan.price})
               </button>
 
-              <p className="text-center text-sm text-slate-500 mt-4">
+              <p className="text-center text-sm text-muted mt-4">
                 By completing your order, you agree to our Terms of Service and
                 Privacy Policy.
               </p>
@@ -281,7 +281,7 @@ export function CheckoutPage() {
 
                 <div className="flex justify-between items-center pt-4 border-t border-slate-700 mb-8">
                   <span className="font-bold text-lg">Total</span>
-                  <span className="font-bold text-2xl text-emerald-400">
+                  <span className="font-bold text-2xl text-pin">
                     ${currentPlan.price}
                   </span>
                 </div>
@@ -292,19 +292,19 @@ export function CheckoutPage() {
                   </h4>
                   <ul className="space-y-3">
                     <li className="flex items-start gap-3 text-sm">
-                      <Check className="w-5 h-5 text-emerald-500 flex-shrink-0" />
+                      <Check className="w-5 h-5 text-pin flex-shrink-0" />
                       <span>Professional Website Creation</span>
                     </li>
                     <li className="flex items-start gap-3 text-sm">
-                      <Check className="w-5 h-5 text-emerald-500 flex-shrink-0" />
+                      <Check className="w-5 h-5 text-pin flex-shrink-0" />
                       <span>SEO Optimization Setup</span>
                     </li>
                     <li className="flex items-start gap-3 text-sm">
-                      <Check className="w-5 h-5 text-emerald-500 flex-shrink-0" />
+                      <Check className="w-5 h-5 text-pin flex-shrink-0" />
                       <span>Winnipeg-Based Support</span>
                     </li>
                     <li className="flex items-start gap-3 text-sm">
-                      <Check className="w-5 h-5 text-emerald-500 flex-shrink-0" />
+                      <Check className="w-5 h-5 text-pin flex-shrink-0" />
                       <span>Mobile Responsive Design</span>
                     </li>
                   </ul>

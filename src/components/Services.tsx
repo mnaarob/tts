@@ -1,91 +1,91 @@
-import React from 'react';
 import { motion } from 'framer-motion';
-import { Globe, LineChart, PackageSearch } from 'lucide-react';
+
 const services = [
-{
-  title: 'Website Creation',
-  description:
-  'Custom, mobile-responsive websites built for conversions. We design digital experiences that turn visitors into loyal customers.',
-  icon: Globe,
-  color: 'bg-blue-100 text-blue-700',
-  status: 'Available Now'
-},
-{
-  title: 'SEO Services',
-  description:
-  'Rank higher on Google with expert optimization. Our local SEO strategies help Canadian customers find you first.',
-  icon: LineChart,
-  color: 'bg-emerald-100 text-emerald-700',
-  status: 'Available Now'
-},
-{
-  title: 'Inventory Management',
-  description:
-  'Future-ready tools to scale your operations. Track stock, manage suppliers, and automate reordering in one place.',
-  icon: PackageSearch,
-  color: 'bg-purple-100 text-purple-700',
-  status: 'Available Now'
-}];
+  {
+    num: '01',
+    title: 'Websites',
+    description:
+      'Fast, accessible storefronts that feel like your shop — not a template farm.',
+  },
+  {
+    num: '02',
+    title: 'Local SEO',
+    description:
+      'Get found by the people already looking for you in your neighbourhood.',
+  },
+  {
+    num: '03',
+    title: 'Inventory',
+    description:
+      'Real-time stock visibility across shelves, so nothing sells that you cannot fulfil.',
+  },
+  {
+    num: '04',
+    title: 'Mobile application',
+    description:
+      'Cross-platform apps for both iOS and Android — one build, ready for the App Store and Google Play.',
+  },
+];
+
+const SIDE_IMAGE = '/images/services-dashboard.png';
 
 export function Services() {
   return (
-    <section id="services" className="scroll-mt-20 py-24 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
-            Everything You Need to Grow
-          </h2>
-          <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-            Comprehensive solutions tailored for the modern Canadian business
-            landscape.
-          </p>
-        </div>
+    <section id="services" className="scroll-mt-20 py-20 sm:py-28 bg-paper">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
+          <div className="lg:col-span-6">
+            <div className="flex items-baseline gap-4 mb-12">
+              <h2 className="font-serif text-4xl sm:text-5xl text-ink tracking-tight">
+                What we build
+              </h2>
+              <span
+                className="hidden sm:block flex-1 h-px bg-line translate-y-[-0.35rem]"
+                aria-hidden
+              />
+            </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {services.map((service, index) =>
-          <motion.div
-            key={service.title}
-            initial={{
-              opacity: 0,
-              y: 20
-            }}
-            whileInView={{
-              opacity: 1,
-              y: 0
-            }}
-            viewport={{
-              once: true
-            }}
-            transition={{
-              duration: 0.5,
-              delay: index * 0.1
-            }}
-            className="relative p-8 rounded-2xl border border-slate-100 bg-white shadow-sm hover:shadow-md transition-shadow">
-
-              <div
-              className={`w-14 h-14 rounded-xl flex items-center justify-center mb-6 ${service.color}`}>
-
-                <service.icon className="w-7 h-7" />
-              </div>
-
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-bold text-slate-900">
-                  {service.title}
-                </h3>
-                {service.status === 'Coming Soon' &&
-              <span className="text-xs font-semibold bg-slate-100 text-slate-500 px-2 py-1 rounded-full">
-                    Coming Soon
+            <ul className="divide-y divide-line border-y border-line">
+              {services.map((service, index) => (
+                <motion.li
+                  key={service.num}
+                  initial={{ opacity: 0, y: 16 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-40px' }}
+                  transition={{ duration: 0.45, delay: index * 0.08 }}
+                  className="py-8 grid grid-cols-[auto_1fr] gap-x-5 gap-y-2">
+                  <span className="font-display text-sm font-semibold text-crimson tracking-wide pt-1">
+                    {service.num}
                   </span>
-              }
-              </div>
+                  <div>
+                    <h3 className="font-display text-xl sm:text-2xl font-bold text-ink tracking-brand mb-2">
+                      {service.title}
+                    </h3>
+                    <p className="text-muted leading-relaxed max-w-md">
+                      {service.description}
+                    </p>
+                  </div>
+                </motion.li>
+              ))}
+            </ul>
+          </div>
 
-              <p className="text-slate-600 leading-relaxed">
-                {service.description}
-              </p>
-            </motion.div>
-          )}
+          <motion.div
+            className="lg:col-span-6 lg:sticky lg:top-28"
+            initial={{ opacity: 0, scale: 1.02 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}>
+            <figure className="relative aspect-[4/5] overflow-hidden bg-line">
+              <img
+                src={SIDE_IMAGE}
+                alt="Retail operator reviewing an inventory dashboard on a laptop"
+                className="h-full w-full object-cover"
+              />
+            </figure>
+          </motion.div>
         </div>
       </div>
-    </section>);
-
+    </section>
+  );
 }

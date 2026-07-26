@@ -48,4 +48,7 @@ fi
 echo "Deploying claim-employee-signup..."
 "${SUPABASE[@]}" functions deploy claim-employee-signup --project-ref "$REF"
 echo ""
-echo "Done. Dashboard → Edge Functions → claim-employee-signup"
+echo "Deploying contact-form..."
+"${SUPABASE[@]}" functions deploy contact-form --project-ref "$REF"
+echo ""
+echo "Done. Dashboard → Edge Functions → claim-employee-signup, contact-form"

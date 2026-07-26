@@ -12,8 +12,33 @@ html {
 }
 
 body {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
+  background-color: #F7F8FA;
+  color: #111111;
+}
+
+::selection {
+  background-color: rgba(200, 16, 46, 0.15);
+  color: #111111;
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 bg-crimson hover:bg-crimson-hover text-white font-semibold px-5 py-2.5 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-crimson/30 disabled:opacity-50;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 border border-line text-ink hover:border-muted bg-white font-semibold px-5 py-2.5 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-ink/10;
+  }
+
+  .form-input {
+    @apply w-full border border-line rounded-lg px-3.5 py-2.5 text-sm bg-white text-ink placeholder:text-muted/70 focus:outline-none focus:ring-2 focus:ring-crimson/20 focus:border-crimson transition-colors;
+  }
+
+  .form-link {
+    @apply font-medium text-crimson hover:text-crimson-hover transition-colors;
+  }
 }
 
 /*

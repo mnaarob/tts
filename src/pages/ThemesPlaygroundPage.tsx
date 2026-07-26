@@ -127,7 +127,7 @@ export function ThemesPlaygroundPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-blue-100 selection:text-blue-900">
+    <div className="min-h-screen bg-paper font-sans text-ink">
       <Header />
       <main className="pt-28 pb-16">
         {data === null ? (
@@ -184,14 +184,14 @@ function OnboardingPhase({
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="text-center mb-8">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-50 text-emerald-700 text-sm font-medium mb-5">
-          <Sparkles className="w-4 h-4" />
-          Live, personalizable demos
+        <div className="inline-flex items-center gap-2 px-3 py-1 border border-crimson/25 bg-crimson/10 text-crimson text-xs font-semibold uppercase tracking-[0.14em] mb-5">
+          <Sparkles className="w-3.5 h-3.5" />
+          Live demos
         </div>
-        <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-slate-900">
+        <h1 className="font-display text-3xl sm:text-5xl font-bold tracking-brand text-ink">
           See your store come to life
         </h1>
-        <p className="mt-4 text-lg text-slate-600 max-w-xl mx-auto">
+        <p className="mt-4 text-lg text-muted max-w-xl mx-auto leading-relaxed">
           Tell us a few details about your business. We'll instantly drop them into every template
           so you can preview your storefront — and switch designs without retyping a thing.
         </p>
@@ -199,15 +199,15 @@ function OnboardingPhase({
 
       <form
         onSubmit={submit}
-        className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8"
+        className="bg-white rounded-2xl border border-line shadow-sm p-6 sm:p-8"
       >
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl bg-crimson text-white flex items-center justify-center">
             <Store className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-base font-semibold text-slate-900">About your store</h2>
-            <p className="text-xs text-slate-500">
+            <h2 className="text-base font-semibold text-ink">About your store</h2>
+            <p className="text-xs text-muted">
               All fields optional — leave blank to use sample text.
             </p>
           </div>
@@ -252,24 +252,17 @@ function OnboardingPhase({
         </div>
 
         <div className="mt-7 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-          <button
-            type="submit"
-            className="inline-flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-3 rounded-xl text-sm font-semibold transition-all hover:shadow-lg hover:-translate-y-0.5 flex-1"
-          >
+          <button type="submit" className="btn-primary flex-1 py-3">
             See your templates
             <ArrowRight className="w-4 h-4" />
           </button>
-          <button
-            type="button"
-            onClick={onSkip}
-            className="inline-flex items-center justify-center gap-2 bg-white text-slate-700 border border-slate-200 hover:border-slate-300 px-6 py-3 rounded-xl text-sm font-semibold transition-colors"
-          >
+          <button type="button" onClick={onSkip} className="btn-secondary py-3">
             Skip with sample data
           </button>
         </div>
       </form>
 
-      <p className="text-center text-xs text-slate-500 mt-6">
+      <p className="text-center text-xs text-muted mt-6">
         Your details stay in this browser only — no account required.
       </p>
     </div>
@@ -318,12 +311,12 @@ function PlaygroundPhase({
       {/* Heading + reset */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-5">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
-            Your store, six ways
+          <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-brand text-ink">
+            Your store, eight ways
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-muted mt-1">
             Personalized for{' '}
-            <span className="font-semibold text-slate-700">{data.name || DEFAULTS.name}</span>.
+            <span className="font-semibold text-ink/80">{data.name || DEFAULTS.name}</span>.
             Switch templates anytime — your info stays put.
           </p>
         </div>
@@ -332,7 +325,7 @@ function PlaygroundPhase({
             href={iframeSrc}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors"
+            className="inline-flex items-center gap-1.5 bg-charcoal hover:bg-ink text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors"
           >
             <ExternalLink className="w-4 h-4" />
             Open full preview
@@ -340,7 +333,7 @@ function PlaygroundPhase({
           <button
             type="button"
             onClick={onReset}
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300 rounded-lg px-3 py-2.5 transition-colors bg-white"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-muted hover:text-ink border border-line hover:border-line rounded-lg px-3 py-2.5 transition-colors bg-white"
             title="Start over"
           >
             <RotateCcw className="w-4 h-4" />
@@ -362,11 +355,11 @@ function PlaygroundPhase({
                 className={`group relative flex flex-col text-left rounded-xl border-2 bg-white overflow-hidden transition-all ${
                   isActive
                     ? 'shadow-md -translate-y-0.5'
-                    : 'border-slate-200 hover:border-slate-300 hover:shadow-sm'
+                    : 'border-line hover:border-line hover:shadow-sm'
                 }`}
                 style={isActive ? { borderColor: t.accentColor } : undefined}
               >
-                <div className="aspect-[16/10] bg-slate-100 overflow-hidden">
+                <div className="aspect-[16/10] bg-paper overflow-hidden">
                   <img
                     src={t.thumbnailPath}
                     alt={`${t.displayName} thumbnail`}
@@ -380,12 +373,12 @@ function PlaygroundPhase({
                 <div className="px-2.5 py-2">
                   <div
                     className={`text-xs font-bold tracking-tight truncate ${
-                      isActive ? 'text-slate-900' : 'text-slate-700'
+                      isActive ? 'text-ink' : 'text-ink/80'
                     }`}
                   >
                     {t.displayName}
                   </div>
-                  <div className="text-[10px] text-slate-500 truncate">{t.tagline}</div>
+                  <div className="text-[10px] text-muted truncate">{t.tagline}</div>
                 </div>
                 {isActive && (
                   <span
@@ -400,14 +393,14 @@ function PlaygroundPhase({
       </div>
 
       {/* Big preview */}
-      <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-200 bg-slate-50">
+      <section className="bg-white rounded-2xl border border-line shadow-sm overflow-hidden">
+        <div className="flex items-center gap-2 px-4 py-2.5 border-b border-line bg-paper">
           <div className="flex gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-rose-300" />
             <span className="w-2.5 h-2.5 rounded-full bg-amber-300" />
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-300" />
           </div>
-          <div className="ml-2 flex-1 truncate text-xs text-slate-500 font-mono">
+          <div className="ml-2 flex-1 truncate text-xs text-muted font-mono">
             {(data.name || DEFAULTS.name).toLowerCase().replace(/\s+/g, '')}.
             {theme.slug}.demo
           </div>
@@ -429,19 +422,19 @@ function PlaygroundPhase({
       </section>
 
       {/* Edit panel */}
-      <section className="mt-4 bg-white rounded-2xl border border-slate-200 shadow-sm">
+      <section className="mt-4 bg-white rounded-2xl border border-line shadow-sm">
         <button
           type="button"
           onClick={() => setEditorOpen((o) => !o)}
           className="w-full flex items-center justify-between px-5 py-4 text-left"
         >
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-lg bg-paper text-ink/80 flex items-center justify-center">
               <Store className="w-4 h-4" />
             </div>
             <div>
-              <div className="text-sm font-semibold text-slate-900">Edit your info</div>
-              <div className="text-xs text-slate-500">
+              <div className="text-sm font-semibold text-ink">Edit your info</div>
+              <div className="text-xs text-muted">
                 Updates land in the preview after a short pause.
               </div>
             </div>
@@ -494,7 +487,7 @@ function PlaygroundPhase({
               <button
                 type="button"
                 onClick={() => onChange(SAMPLE)}
-                className="text-xs font-medium text-slate-600 hover:text-slate-900 underline underline-offset-2"
+                className="text-xs font-medium text-muted hover:text-ink underline underline-offset-2"
               >
                 Use sample store
               </button>
@@ -502,7 +495,7 @@ function PlaygroundPhase({
               <button
                 type="button"
                 onClick={() => onChange(DEFAULTS)}
-                className="text-xs font-medium text-slate-600 hover:text-slate-900 underline underline-offset-2"
+                className="text-xs font-medium text-muted hover:text-ink underline underline-offset-2"
               >
                 Reset fields
               </button>
@@ -511,37 +504,29 @@ function PlaygroundPhase({
         )}
       </section>
 
-      {/* CTA card */}
-      <section
-        className="mt-6 rounded-2xl p-6 sm:p-8 text-white relative overflow-hidden"
-        style={{
-          background: `linear-gradient(135deg, ${theme.accentColor}, ${theme.accentColor}dd)`,
-        }}
-      >
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
+      {/* CTA card — shared Mercantile brand surface */}
+      <section className="mt-6 rounded-2xl p-6 sm:p-8 text-white bg-charcoal border border-white/10">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
           <div>
-            <div className="text-xs font-bold uppercase tracking-widest opacity-80">
+            <div className="text-xs font-semibold uppercase tracking-[0.14em] text-white/55">
               Ready to launch?
             </div>
-            <h3 className="mt-1 text-xl sm:text-2xl font-bold">
+            <h3 className="mt-1 font-display text-xl sm:text-2xl font-bold tracking-brand">
               Make {data.name || DEFAULTS.name} your real storefront.
             </h3>
-            <p className="mt-1.5 text-sm text-white/85 max-w-xl">
+            <p className="mt-1.5 text-sm text-white/70 max-w-xl leading-relaxed">
               Create an account and we'll wire this template up to your live inventory, hours and
               pricing — usually in under a day.
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-2 shrink-0">
-            <Link
-              to="/signup"
-              className="inline-flex items-center justify-center gap-2 bg-white text-slate-900 hover:bg-slate-50 px-5 py-3 rounded-xl text-sm font-semibold transition-colors"
-            >
+            <Link to="/signup" className="btn-primary py-3">
               Create your account
               <ArrowRight className="w-4 h-4" />
             </Link>
             <Link
               to="/"
-              className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white border border-white/30 px-5 py-3 rounded-xl text-sm font-semibold transition-colors"
+              className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/15 text-white border border-white/25 px-5 py-3 rounded-lg text-sm font-semibold transition-colors"
             >
               Back to home
             </Link>
@@ -568,7 +553,7 @@ interface FieldProps {
 function Field({ label, value, placeholder, type = 'text', autoFocus, onChange }: FieldProps) {
   return (
     <label className="block">
-      <span className="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1.5">
+      <span className="block text-xs font-semibold text-ink/80 uppercase tracking-wide mb-1.5">
         {label}
       </span>
       <input
@@ -577,7 +562,7 @@ function Field({ label, value, placeholder, type = 'text', autoFocus, onChange }
         placeholder={placeholder}
         autoFocus={autoFocus}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white transition-colors"
+        className="form-input"
       />
     </label>
   );

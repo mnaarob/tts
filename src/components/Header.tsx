@@ -5,34 +5,39 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { Logo } from './Logo';
 
-export function Header() {
+type HeaderProps = {
+  /** Transparent over a dark hero until the user scrolls. */
+  overHero?: boolean;
+};
+
+export function Header({ overHero = false }: HeaderProps) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
+      setIsScrolled(window.scrollY > 24);
     };
-    window.addEventListener('scroll', handleScroll);
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const onDark = overHero && !isScrolled;
+
   const navLinks = [
-  {
-    name: 'Services',
-    target: 'services'
-  },
-  {
-    name: 'Features',
-    target: 'features'
-  }];
+    { name: 'Services', target: 'services' },
+    { name: 'Results', target: 'results' },
+  ];
 
   function scrollToSection(id: string) {
     const doScroll = () => {
       const el = document.getElementById(id);
       if (!el) return;
-      const top = el.getBoundingClientRect().top + window.scrollY - 80;
+      const top = el.getBoundingClientRect().top + window.scrollY - 72;
       window.scrollTo({ top, behavior: 'smooth' });
     };
 
@@ -53,113 +58,109 @@ export function Header() {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/90 backdrop-blur-md shadow-sm py-4' : 'bg-transparent py-6'}`}>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 group">
-            <Logo className="w-9 h-9 text-slate-900 group-hover:text-slate-700 transition-colors" />
+      className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-300 ${
+        isScrolled || !overHero
+          ? 'bg-paper/95 backdrop-blur-md border-b border-line py-3'
+          : 'bg-transparent border-b border-transparent py-5'
+      }`}>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center gap-4">
+          <Link to="/" className="flex items-center gap-2.5 group shrink-0">
+            <Logo className="w-8 h-8" />
             <span
-              className={`font-bold text-xl tracking-tight ${isScrolled ? 'text-slate-900' : 'text-slate-900'}`}>
-
-              Tech to Store
+              className={`font-display font-bold text-[1.05rem] tracking-brand lowercase transition-colors ${
+                onDark ? 'text-white' : 'text-ink'
+              }`}>
+              tech to store
             </span>
           </Link>
 
-          {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-8">
-            {navLinks.map((link) =>
-            <button
-              type="button"
-              key={link.name}
-              onClick={() => scrollToSection(link.target)}
-              className="text-sm font-medium text-slate-600 hover:text-blue-900 transition-colors cursor-pointer bg-transparent border-none p-0">
-
+            {navLinks.map((link) => (
+              <button
+                type="button"
+                key={link.name}
+                onClick={() => scrollToSection(link.target)}
+                className={`text-sm font-medium transition-colors cursor-pointer bg-transparent border-none p-0 ${
+                  onDark
+                    ? 'text-white/80 hover:text-white'
+                    : 'text-muted hover:text-ink'
+                }`}>
                 {link.name}
               </button>
-            )}
-            <Link
-              to="/themes"
-              className="text-sm font-medium text-slate-600 hover:text-blue-900 transition-colors">
+            ))}
+            <button
+              type="button"
+              onClick={() => scrollToSection('templates')}
+              className={`text-sm font-medium transition-colors cursor-pointer bg-transparent border-none p-0 ${
+                onDark
+                  ? 'text-white/80 hover:text-white'
+                  : 'text-muted hover:text-ink'
+              }`}>
               Templates
-            </Link>
+            </button>
             {user ? (
               <Link
                 to="/inventory"
-                className="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-all hover:shadow-lg hover:-translate-y-0.5">
+                className="bg-crimson hover:bg-crimson-hover text-white px-4 py-2 text-sm font-semibold transition-colors">
                 My Inventory
               </Link>
             ) : (
               <>
                 <Link
                   to="/login"
-                  className="text-sm font-medium text-slate-600 hover:text-blue-900 transition-colors">
+                  className={`text-sm font-medium transition-colors ${
+                    onDark
+                      ? 'text-white/80 hover:text-white'
+                      : 'text-muted hover:text-ink'
+                  }`}>
                   Sign in
                 </Link>
                 <Link
-                  to="/signup"
-                  className="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-all hover:shadow-lg hover:-translate-y-0.5">
-                  Create account
+                  to="/contact"
+                  className="bg-crimson hover:bg-crimson-hover text-white px-4 py-2 text-sm font-semibold transition-colors">
+                  Talk to us
                 </Link>
               </>
             )}
           </nav>
 
-          {/* Mobile Menu Button */}
           <button
-            className="md:hidden p-2 text-slate-600"
+            className={`md:hidden p-2 ${onDark ? 'text-white' : 'text-ink'}`}
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label="Toggle menu">
-
-            {isMobileMenuOpen ?
-            <X className="w-6 h-6" /> :
-
-            <Menu className="w-6 h-6" />
-            }
+            {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
         </div>
       </div>
 
-      {/* Mobile Menu */}
       <AnimatePresence>
-        {isMobileMenuOpen &&
-        <motion.div
-          initial={{
-            opacity: 0,
-            height: 0
-          }}
-          animate={{
-            opacity: 1,
-            height: 'auto'
-          }}
-          exit={{
-            opacity: 0,
-            height: 0
-          }}
-          className="md:hidden bg-white border-t border-slate-100 overflow-hidden">
-
-            <div className="px-4 py-6 space-y-4 flex flex-col">
-              {navLinks.map((link) =>
-            <button
-              type="button"
-              key={link.name}
-              className="text-base font-medium text-slate-600 hover:text-blue-900 py-2 text-left bg-transparent border-none p-0 cursor-pointer"
-              onClick={() => handleMobileNavClick(link.target)}>
-
+        {isMobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="md:hidden bg-paper border-t border-line overflow-hidden">
+            <div className="px-4 py-6 space-y-1 flex flex-col">
+              {navLinks.map((link) => (
+                <button
+                  type="button"
+                  key={link.name}
+                  className="text-base font-medium text-ink py-2.5 text-left bg-transparent border-none p-0 cursor-pointer"
+                  onClick={() => handleMobileNavClick(link.target)}>
                   {link.name}
                 </button>
-            )}
-              <Link
-                to="/themes"
-                className="text-base font-medium text-slate-600 hover:text-blue-900 py-2"
-                onClick={() => setIsMobileMenuOpen(false)}>
+              ))}
+              <button
+                type="button"
+                className="text-base font-medium text-ink py-2.5 text-left bg-transparent border-none p-0 cursor-pointer"
+                onClick={() => handleMobileNavClick('templates')}>
                 Templates
-              </Link>
+              </button>
               {user ? (
                 <Link
                   to="/inventory"
-                  className="bg-emerald-500 text-white px-5 py-3 rounded-lg text-center font-semibold mt-4"
+                  className="bg-crimson text-white px-5 py-3 text-center font-semibold mt-3"
                   onClick={() => setIsMobileMenuOpen(false)}>
                   My Inventory
                 </Link>
@@ -167,22 +168,22 @@ export function Header() {
                 <>
                   <Link
                     to="/login"
-                    className="text-base font-medium text-slate-600 py-2"
+                    className="text-base font-medium text-muted py-2.5"
                     onClick={() => setIsMobileMenuOpen(false)}>
                     Sign in
                   </Link>
                   <Link
-                    to="/signup"
-                    className="bg-emerald-500 text-white px-5 py-3 rounded-lg text-center font-semibold"
+                    to="/contact"
+                    className="bg-crimson text-white px-5 py-3 text-center font-semibold mt-2"
                     onClick={() => setIsMobileMenuOpen(false)}>
-                    Create account
+                    Talk to us
                   </Link>
                 </>
               )}
             </div>
           </motion.div>
-        }
+        )}
       </AnimatePresence>
-    </header>);
-
+    </header>
+  );
 }

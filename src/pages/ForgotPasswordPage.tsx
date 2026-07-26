@@ -50,33 +50,33 @@ export function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-paper flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <Link to="/" className="flex justify-center items-center gap-2">
-          <Logo className="w-11 h-11 text-slate-900" />
-          <span className="font-bold text-2xl text-slate-900">Tech to Store</span>
+          <Logo className="w-11 h-11 text-ink" />
+          <span className="font-display font-bold text-2xl text-ink lowercase tracking-brand">tech to store</span>
         </Link>
-        <h2 className="mt-6 text-center text-xl font-bold text-slate-900">Reset your password</h2>
-        <p className="mt-2 text-center text-sm text-slate-600">
+        <h2 className="mt-6 text-center text-xl font-bold text-ink">Reset your password</h2>
+        <p className="mt-2 text-center text-sm text-muted">
           Enter your email and we'll send you a reset link.
         </p>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-6 shadow rounded-xl border border-slate-200">
+        <div className="bg-white py-8 px-6 shadow rounded-xl border border-line">
           {sent ? (
             <div className="text-center">
               <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Mail className="w-8 h-8 text-emerald-600" />
               </div>
-              <h3 className="text-lg font-semibold text-slate-900">Check your email</h3>
-              <p className="mt-2 text-sm text-slate-600">
+              <h3 className="text-lg font-semibold text-ink">Check your email</h3>
+              <p className="mt-2 text-sm text-muted">
                 If an account exists for <strong>{email}</strong>, we just sent it a
                 password reset link. Click the link in the email to set a new password.
               </p>
               <Link
                 to="/login"
-                className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-500"
+                className="mt-6 inline-flex items-center gap-2 text-sm form-link"
               >
                 <ArrowLeft className="w-4 h-4" />
                 Back to sign in
@@ -98,7 +98,7 @@ export function ForgotPasswordPage() {
                 )}
 
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1">
+                  <label htmlFor="email" className="block text-sm font-medium text-ink/80 mb-1">
                     Email
                   </label>
                   <div className="relative">
@@ -111,14 +111,14 @@ export function ForgotPasswordPage() {
                       placeholder="you@example.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="block w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      className="block w-full pl-10 pr-4 py-2.5 border border-line rounded-lg focus:ring-2 focus:ring-crimson/30 focus:border-crimson text-sm"
                     />
                   </div>
                 </div>
 
                 {TURNSTILE_SITE_KEY && (
                   <div className="space-y-2">
-                    <p className="text-xs text-slate-500 text-center">Verification</p>
+                    <p className="text-xs text-muted text-center">Verification</p>
                     <AuthTurnstile ref={turnstileRef} onTokenChange={setCaptchaToken} />
                   </div>
                 )}
@@ -126,14 +126,14 @@ export function ForgotPasswordPage() {
                 <button
                   type="submit"
                   disabled={loading || (Boolean(TURNSTILE_SITE_KEY) && !captchaToken)}
-                  className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-emerald-500 hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-50 transition-colors"
+                  className="btn-primary w-full py-3"
                 >
                   {loading ? 'Sending...' : 'Send reset link'}
                 </button>
               </form>
 
-              <p className="mt-4 text-center text-sm text-slate-600">
-                <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500 inline-flex items-center gap-1">
+              <p className="mt-4 text-center text-sm text-muted">
+                <Link to="/login" className="form-link inline-flex items-center gap-1">
                   <ArrowLeft className="w-3.5 h-3.5" />
                   Back to sign in
                 </Link>

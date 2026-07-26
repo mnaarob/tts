@@ -89,35 +89,35 @@ export function ResetPasswordPage() {
 
   if (!sessionReady) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-paper flex flex-col justify-center py-12 sm:px-6 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-900 mx-auto mb-4" />
-          <p className="text-slate-600 text-sm">Verifying your reset link...</p>
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-crimson mx-auto mb-4" />
+          <p className="text-muted text-sm">Verifying your reset link...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-paper flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <Link to="/" className="flex justify-center items-center gap-2">
-          <Logo className="w-11 h-11 text-slate-900" />
-          <span className="font-bold text-2xl text-slate-900">Tech to Store</span>
+          <Logo className="w-11 h-11 text-ink" />
+          <span className="font-display font-bold text-2xl text-ink lowercase tracking-brand">tech to store</span>
         </Link>
-        <h2 className="mt-6 text-center text-xl font-bold text-slate-900">
+        <h2 className="mt-6 text-center text-xl font-bold text-ink">
           {done ? 'Password updated' : 'Set a new password'}
         </h2>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-6 shadow rounded-xl border border-slate-200">
+        <div className="bg-white py-8 px-6 shadow rounded-xl border border-line">
           {done ? (
             <div className="text-center">
               <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <CheckCircle className="w-8 h-8 text-emerald-600" />
               </div>
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-muted">
                 Your password has been updated. Redirecting to sign in...
               </p>
             </div>
@@ -130,7 +130,7 @@ export function ResetPasswordPage() {
               )}
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-1">
+                <label htmlFor="password" className="block text-sm font-medium text-ink/80 mb-1">
                   New password
                 </label>
                 <div className="relative">
@@ -143,14 +143,14 @@ export function ResetPasswordPage() {
                     minLength={MIN_PASSWORD_LENGTH}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="block w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    className="block w-full pl-10 pr-4 py-2.5 border border-line rounded-lg focus:ring-2 focus:ring-crimson/30 focus:border-crimson text-sm"
                   />
                 </div>
-                <p className="mt-1 text-xs text-slate-500">{PASSWORD_HELP_TEXT}</p>
+                <p className="mt-1 text-xs text-muted">{PASSWORD_HELP_TEXT}</p>
               </div>
 
               <div>
-                <label htmlFor="confirm" className="block text-sm font-medium text-slate-700 mb-1">
+                <label htmlFor="confirm" className="block text-sm font-medium text-ink/80 mb-1">
                   Confirm new password
                 </label>
                 <div className="relative">
@@ -163,7 +163,7 @@ export function ResetPasswordPage() {
                     minLength={MIN_PASSWORD_LENGTH}
                     value={confirm}
                     onChange={(e) => setConfirm(e.target.value)}
-                    className="block w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    className="block w-full pl-10 pr-4 py-2.5 border border-line rounded-lg focus:ring-2 focus:ring-crimson/30 focus:border-crimson text-sm"
                   />
                 </div>
               </div>
@@ -171,7 +171,7 @@ export function ResetPasswordPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-emerald-500 hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-50 transition-colors"
+                className="btn-primary w-full py-3"
               >
                 {loading ? 'Updating...' : 'Update password'}
               </button>

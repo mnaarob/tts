@@ -107,30 +107,30 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-paper flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <Link to="/" className="flex justify-center items-center gap-2">
-          <Logo className="w-11 h-11 text-slate-900" />
-          <span className="font-bold text-2xl text-slate-900">Tech to Store</span>
+          <Logo className="w-11 h-11 text-ink" />
+          <span className="font-display font-bold text-2xl text-ink lowercase tracking-brand">tech to store</span>
         </Link>
-        <h2 className="mt-6 text-center text-xl font-bold text-slate-900">Sign in to your account</h2>
+        <h2 className="mt-6 text-center text-xl font-bold text-ink">Sign in to your account</h2>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-6 shadow rounded-xl border border-slate-200">
+        <div className="bg-white py-8 px-6 shadow rounded-xl border border-line">
           <form className="space-y-5" onSubmit={handleSubmit}>
             {confirmMessage && (
-              <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-lg text-sm">
+              <div className="bg-pin/10 border border-pin/30 text-ink px-4 py-3 rounded-lg text-sm">
                 Check your email and click the confirmation link, then sign in here.
               </div>
             )}
             {signupCompleteMessage && (
-              <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-lg text-sm">
+              <div className="bg-pin/10 border border-pin/30 text-ink px-4 py-3 rounded-lg text-sm">
                 Account created. Sign in below with the same store name, Employee ID, email, and password.
               </div>
             )}
             {accountExistsMessage && (
-              <div className="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg text-sm">
+              <div className="bg-amber-50 border border-amber-200 text-amber-900 px-4 py-3 rounded-lg text-sm">
                 You already have an account with this email. Sign in with your <strong>existing</strong> password —
                 we'll link your invite as soon as you're in.
               </div>
@@ -157,7 +157,7 @@ export function LoginPage() {
 
             {/* Store Name */}
             <div>
-              <label htmlFor="storeName" className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="storeName" className="block text-sm font-medium text-ink/80 mb-1">
                 Store Name
               </label>
               <div className="relative">
@@ -170,14 +170,14 @@ export function LoginPage() {
                   placeholder="e.g. Fresh Grocery Mart"
                   value={storeName}
                   onChange={(e) => setStoreName(e.target.value)}
-                  className="block w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  className="block w-full pl-10 pr-4 py-2.5 border border-line rounded-lg focus:ring-2 focus:ring-crimson/30 focus:border-crimson text-sm"
                 />
               </div>
             </div>
 
             {/* Employee ID */}
             <div>
-              <label htmlFor="employeeId" className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="employeeId" className="block text-sm font-medium text-ink/80 mb-1">
                 Employee ID
               </label>
               <div className="relative">
@@ -191,7 +191,7 @@ export function LoginPage() {
                   placeholder="6-character ID"
                   value={employeeId}
                   onChange={(e) => setEmployeeId(e.target.value.toUpperCase())}
-                  className="block w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm font-mono tracking-widest uppercase"
+                  className="block w-full pl-10 pr-4 py-2.5 border border-line rounded-lg focus:ring-2 focus:ring-crimson/30 focus:border-crimson text-sm font-mono tracking-widest uppercase"
                 />
               </div>
             </div>
@@ -199,7 +199,7 @@ export function LoginPage() {
             {/* Divider */}
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-slate-200" />
+                <div className="w-full border-t border-line" />
               </div>
               <div className="relative flex justify-center text-xs text-slate-400 bg-white px-2">
                 account credentials
@@ -208,7 +208,7 @@ export function LoginPage() {
 
             {/* Email */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="email" className="block text-sm font-medium text-ink/80 mb-1">
                 Email
               </label>
               <div className="relative">
@@ -220,14 +220,14 @@ export function LoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="block w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  className="block w-full pl-10 pr-4 py-2.5 border border-line rounded-lg focus:ring-2 focus:ring-crimson/30 focus:border-crimson text-sm"
                 />
               </div>
             </div>
 
             {/* Password */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="password" className="block text-sm font-medium text-ink/80 mb-1">
                 Password
               </label>
               <div className="relative">
@@ -239,7 +239,7 @@ export function LoginPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  className="block w-full pl-10 pr-4 py-2.5 border border-line rounded-lg focus:ring-2 focus:ring-crimson/30 focus:border-crimson text-sm"
                 />
               </div>
             </div>
@@ -247,7 +247,7 @@ export function LoginPage() {
             <div className="flex justify-end">
               <Link
                 to="/forgot-password"
-                className="text-xs text-blue-600 hover:text-blue-500 font-medium"
+                className="form-link text-xs"
               >
                 Forgot password?
               </Link>
@@ -255,7 +255,7 @@ export function LoginPage() {
 
             {TURNSTILE_SITE_KEY && (
               <div className="space-y-2">
-                <p className="text-xs text-slate-500 text-center">Verification</p>
+                <p className="text-xs text-muted text-center">Verification</p>
                 <AuthTurnstile ref={turnstileRef} onTokenChange={setCaptchaToken} />
               </div>
             )}
@@ -263,15 +263,15 @@ export function LoginPage() {
             <button
               type="submit"
               disabled={loading || (Boolean(TURNSTILE_SITE_KEY) && !captchaToken)}
-              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-emerald-500 hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-50 transition-colors mt-2"
+              className="btn-primary w-full py-3 mt-2"
             >
               {loading ? 'Signing in…' : 'Sign in'}
             </button>
           </form>
 
-          <p className="mt-4 text-center text-sm text-slate-600">
+          <p className="mt-4 text-center text-sm text-muted">
             New employee?{' '}
-            <Link to="/signup" className="font-medium text-blue-600 hover:text-blue-500">
+            <Link to="/signup" className="form-link">
               Create account
             </Link>
             {' '}with your Employee ID from your manager.
