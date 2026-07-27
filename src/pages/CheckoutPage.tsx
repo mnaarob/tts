@@ -301,7 +301,7 @@ export function CheckoutPage() {
                     </li>
                     <li className="flex items-start gap-3 text-sm">
                       <Check className="w-5 h-5 text-pin flex-shrink-0" />
-                      <span>Winnipeg-based contact</span>
+                      <span>Direct contact with our team</span>
                     </li>
                     <li className="flex items-start gap-3 text-sm">
                       <Check className="w-5 h-5 text-pin flex-shrink-0" />

@@ -35,8 +35,8 @@ export function Hero() {
             Digital tools for stores that sell real things.
           </p>
           <p className="text-sm sm:text-base md:text-lg text-white/70 leading-relaxed mb-5 sm:mb-8 max-w-lg">
-            An early-stage Winnipeg initiative exploring websites, local SEO,
-            and inventory tools with retailers in Canada and the United States.
+            An initiative exploring websites, local SEO, inventory tools and
+            mobile application with retailers.
           </p>
           <Link
             to="/contact"

@@ -866,7 +866,7 @@ interface SerpResult {
 
 const BASE_RESULTS: SerpResult[] = [
   { id: 'a', rank: 1, title: 'Loblaws \u2014 Online Grocery', url: 'loblaws.ca', snippet: 'Shop fresh produce and organic groceries online.' },
-  { id: 'b', rank: 2, title: 'Sobeys Canada', url: 'sobeys.com', snippet: 'Your neighbourhood grocer with delivery.' },
+  { id: 'b', rank: 2, title: 'Sobeys', url: 'sobeys.com', snippet: 'Your neighbourhood grocer with delivery.' },
   { id: 'c', rank: 3, title: 'Whole Foods Market', url: 'wholefoodsmarket.com', snippet: 'Premium organic produce and pantry.' },
   { id: 'you', rank: 21, isYou: true, title: 'Your Store \u2014 Local Organic Grocer', url: 'yourstore.com', snippet: 'Family-owned, fresh daily.' },
   { id: 'd', rank: 4, title: 'FreshCo', url: 'freshco.com', snippet: 'Lowest prices on fresh groceries.' },

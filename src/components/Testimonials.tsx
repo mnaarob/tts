@@ -18,7 +18,7 @@ const testimonials = [
 },
 {
   quote:
-  'Responsive and thoughtful about small retailers in Canada and the U.S. It felt collaborative while the project is still early.',
+  'Responsive and thoughtful about small retailers. It felt collaborative and practical.',
   author: 'Maria Santos',
   role: 'Owner, Coastal Crafts',
   image: 'MS'

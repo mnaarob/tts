@@ -6,12 +6,12 @@ export function AccessibilityPage() {
   return (
     <LegalPageLayout title="Accessibility" updated={UPDATED}>
       <p>
-        Tech to Store is an early-stage initiative based in Winnipeg, Manitoba,
-        Canada. We want the Site and related interfaces to be usable by as many
-        people as reasonably possible, including persons with disabilities. We
-        work toward inclusive design with reference to widely used guidance such
-        as the Web Content Accessibility Guidelines (WCAG), within the limits of
-        an early-stage project. This statement describes our intent; it is not a
+        Tech to Store is an initiative exploring digital tools for retailers.
+        We want the Site and related interfaces to be usable by as many people
+        as reasonably possible, including persons with disabilities. We work
+        toward inclusive design with reference to widely used guidance such as
+        the Web Content Accessibility Guidelines (WCAG), within the limits of
+        this initiative. This statement describes our intent; it is not a
         certification of full compliance with any statute or guideline level.
       </p>
 
@@ -100,14 +100,13 @@ export function AccessibilityPage() {
       <p>
         If you meet a barrier or need information in another format, email us.
         We will review requests in good faith and respond within a reasonable
-        time for an early-stage team.
+        time.
       </p>
       <ul>
         <li>
           Email:{' '}
           <a href="mailto:contact@techtostore.com">contact@techtostore.com</a>
         </li>
-        <li>Location: Winnipeg, Manitoba, Canada</li>
       </ul>
       <p>
         Please include the page or feature, any assistive technology you use,
@@ -117,14 +116,13 @@ export function AccessibilityPage() {
       <h2>7. Other rights</h2>
       <p>
         Depending on where you live, you may have accessibility or human-rights
-        protections under local law (for example, in Manitoba, elsewhere in
-        Canada, or in the United States). This page does not limit those rights.
-        You may contact the relevant public authority for guidance if needed.
+        protections under local law. This page does not limit those rights. You
+        may contact the relevant public authority for guidance if needed.
       </p>
 
       <h2>8. Updates</h2>
       <p>
-        We may revise this statement as the project grows. The &ldquo;Last
+        We may revise this statement as the initiative grows. The &ldquo;Last
         updated&rdquo; date reflects the latest revision.
       </p>
 
@@ -133,7 +131,7 @@ export function AccessibilityPage() {
         Accessibility feedback:{' '}
         <a href="mailto:contact@techtostore.com">contact@techtostore.com</a>
         <br />
-        Tech to Store — Winnipeg, Manitoba, Canada (early-stage initiative)
+        Tech to Store — an initiative exploring tools for retailers
       </p>
     </LegalPageLayout>
   );

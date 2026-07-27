@@ -100,7 +100,7 @@ export function ContactPage() {
                 <h2 className="font-display text-xl font-bold text-ink mb-2">Message received</h2>
                 <p className="text-sm text-muted leading-relaxed mb-6">
                   If we can help, we aim to follow up at the email you provided.
-                  Timing may vary while we are in an early stage.
+                  Timing may vary as we grow this initiative.
                 </p>
                 <Link to="/" className="btn-primary">
                   Back to home

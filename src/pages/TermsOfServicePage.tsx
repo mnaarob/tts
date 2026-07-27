@@ -11,9 +11,7 @@ export function TermsOfServicePage() {
         &ldquo;Site&rdquo;) and related previews, tools, or project work offered
         under the name Tech to Store (&ldquo;Tech to Store,&rdquo;
         &ldquo;we,&rdquo; &ldquo;us,&rdquo; or &ldquo;our&rdquo;). Tech to Store
-        is an early-stage initiative based in Winnipeg, Manitoba, Canada. It is
-        not yet a registered corporation. We are observing and exploring demand
-        for digital tools among retailers in Canada and the United States.
+        is an initiative exploring digital tools with retailers.
       </p>
       <p>
         By using the Site or related Services, you agree to these Terms and our
@@ -22,17 +20,16 @@ export function TermsOfServicePage() {
         authority to do so.
       </p>
       <p>
-        These Terms are informational site rules for an exploratory project.
-        They are not a substitute for a signed project agreement, and they are
-        not legal advice.
+        These Terms are informational site rules for this initiative. They are
+        not a substitute for a signed project agreement, and they are not legal
+        advice.
       </p>
 
       <h2>1. Who we are</h2>
       <p>
         Contact:{' '}
         <a href="mailto:contact@techtostore.com">contact@techtostore.com</a>.
-        Location of operators: Winnipeg, Manitoba, Canada. Status: early-stage,
-        not yet incorporated.
+        Tech to Store is an initiative operated under that name.
       </p>
 
       <h2>2. Nature of the Services</h2>
@@ -54,8 +51,7 @@ export function TermsOfServicePage() {
       <h2>3. Eligibility and accounts</h2>
       <ul>
         <li>
-          You must be at least the age of majority where you live (province,
-          territory, or U.S. state).
+          You must be at least the age of majority where you live.
         </li>
         <li>
           You are responsible for account credentials and activity under your
@@ -103,8 +99,7 @@ export function TermsOfServicePage() {
       <p>
         You alone are responsible for the accuracy of inventory, pricing,
         product claims, and compliance of your retail or online operations with
-        laws that apply to you (including consumer, advertising, tax, and
-        product rules in Canada, the United States, or elsewhere).
+        laws that apply to you.
       </p>
 
       <h2>6. Our materials</h2>
@@ -119,8 +114,8 @@ export function TermsOfServicePage() {
       <p>
         If fees apply, they will be stated in a Project Note or clearly in a
         checkout or invoice flow. Until paid as agreed, we may pause work or
-        access. You are responsible for taxes that apply to you. Early-stage
-        pricing and packages may change.
+        access. You are responsible for taxes that apply to you. Pricing and
+        packages for this initiative may change.
       </p>
 
       <h2>8. Third-party platforms</h2>
@@ -157,8 +152,8 @@ export function TermsOfServicePage() {
 
       <h2>11. Limitation of liability</h2>
       <p>
-        To the fullest extent permitted by law, Tech to Store and the
-        individuals operating it will not be liable for indirect, incidental,
+        To the fullest extent permitted by law, Tech to Store and the people
+        operating this initiative will not be liable for indirect, incidental,
         special, consequential, punitive, or exemplary damages, or loss of
         profits, revenue, data, goodwill, or opportunity, arising from the Site,
         Services, or these Terms, whether in contract, tort (including
@@ -168,9 +163,9 @@ export function TermsOfServicePage() {
         Where liability cannot be excluded, our aggregate liability for claims
         related to the Site, Services, or these Terms is limited to the greater
         of (a) amounts you paid us for the specific work giving rise to the
-        claim in the prior twelve (12) months, or (b) one hundred Canadian
-        dollars (CAD $100), except where a higher minimum is required by law
-        that cannot be waived.
+        claim in the prior twelve (12) months, or (b) one hundred dollars
+        (USD $100 or CAD $100, as applicable), except where a higher minimum is
+        required by law that cannot be waived.
       </p>
 
       <h2>12. Your responsibility for claims</h2>
@@ -191,17 +186,17 @@ export function TermsOfServicePage() {
 
       <h2>14. Governing law</h2>
       <p>
-        These Terms are governed by the laws of Manitoba and the federal laws of
-        Canada that apply there, without regard to conflict-of-law rules, except
-        where mandatory consumer or other laws of your place of residence
-        (including in the United States) require otherwise. Courts in Winnipeg,
-        Manitoba may hear disputes, without limiting any non-waivable rights you
-        have to bring claims in another forum required by law.
+        These Terms are governed by applicable law, without regard to
+        conflict-of-law rules that would require another result, except where
+        mandatory consumer or other laws of your place of residence require
+        otherwise. Disputes may be heard in a court of competent jurisdiction,
+        without limiting any non-waivable rights you have to bring claims in
+        another forum required by law.
       </p>
 
       <h2>15. Changes</h2>
       <p>
-        We may update these Terms as the project evolves. The date above will
+        We may update these Terms as the initiative evolves. The date above will
         change when we post updates. Continued use after posting means you
         accept the revised Terms, except where additional consent is required by
         law.
@@ -218,7 +213,7 @@ export function TermsOfServicePage() {
         <li>Failure to enforce a part is not a waiver.</li>
         <li>
           You may not assign these Terms without our prior written consent; we
-          may assign them if the initiative is later incorporated or transferred.
+          may assign them if this initiative is later reorganized or transferred.
         </li>
         <li>
           Notices may be sent to the email on your account or to
@@ -230,7 +225,7 @@ export function TermsOfServicePage() {
       <p>
         <a href="mailto:contact@techtostore.com">contact@techtostore.com</a>
         <br />
-        Tech to Store — Winnipeg, Manitoba, Canada (early-stage initiative)
+        Tech to Store — an initiative exploring tools for retailers
       </p>
     </LegalPageLayout>
   );
