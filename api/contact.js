@@ -1,3 +1,5 @@
+import nodemailer from 'nodemailer';
+
 const CONTACT_TO = process.env.CONTACT_TO || 'contact@techtostore.com';
 
 function isPlausibleEmail(email) {
@@ -18,71 +20,25 @@ async function verifyTurnstile(token, secret, remoteIp) {
   return Boolean(data?.success);
 }
 
-async function sendViaFormSubmit(fields) {
-  const res = await fetch(
-    `https://formsubmit.co/ajax/${encodeURIComponent(CONTACT_TO)}`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-      body: JSON.stringify({
-        name: fields.name,
-        phone: fields.phone,
-        email: fields.email,
-        business_name: fields.businessName || '(not provided)',
-        message: fields.message,
-        _subject: fields.subject,
-        _template: 'table',
-        _replyto: fields.email,
-        _captcha: 'false',
-      }),
-    },
-  );
-
-  const text = await res.text();
-  let data = {};
-  try {
-    data = JSON.parse(text);
-  } catch {
-    const err = new Error(
-      `FormSubmit returned non-JSON (${res.status}): ${text.slice(0, 180)}`,
-    );
-    err.code = 'FORMSUBMIT';
-    throw err;
-  }
-
-  const failed =
-    !res.ok ||
-    data.error ||
-    data.success === false ||
-    data.success === 'false';
-
-  if (failed) {
-    const msg =
-      data.message ||
-      data.error ||
-      `FormSubmit failed (${res.status})`;
-    const err = new Error(msg);
-    err.code = /activat/i.test(msg) ? 'NEEDS_ACTIVATION' : 'FORMSUBMIT';
-    throw err;
-  }
-}
-
-/** Minimal SMTP over TLS for Namecheap Private Email (port 465). */
 async function sendViaSmtp(fields) {
-  const net = await import('node:tls');
   const host = process.env.SMTP_HOST || 'mail.privateemail.com';
   const port = Number(process.env.SMTP_PORT || '465');
   const user = process.env.SMTP_USER || '';
   const pass = process.env.SMTP_PASS || '';
-  if (!user || !pass) throw new Error('SMTP not configured');
+  if (!user || !pass) {
+    const err = new Error('SMTP not configured');
+    err.code = 'NO_SMTP';
+    throw err;
+  }
 
-  const from = user;
-  const to = CONTACT_TO;
-  const subject = fields.subject;
-  const content = [
+  const transporter = nodemailer.createTransport({
+    host,
+    port,
+    secure: port === 465,
+    auth: { user, pass },
+  });
+
+  const text = [
     'New message from the Tech to Store website contact form.',
     '',
     `Name: ${fields.name}`,
@@ -94,100 +50,44 @@ async function sendViaSmtp(fields) {
     fields.message,
     '',
     `— sent ${new Date().toISOString()}`,
-  ].join('\r\n');
+  ].join('\n');
 
-  const encodedSubject = `=?UTF-8?B?${Buffer.from(subject, 'utf8').toString('base64')}?=`;
-  const data = [
-    `From: ${from}`,
-    `To: ${to}`,
-    `Reply-To: ${fields.email}`,
-    `Subject: ${encodedSubject}`,
-    'MIME-Version: 1.0',
-    'Content-Type: text/plain; charset=utf-8',
-    'Content-Transfer-Encoding: 8bit',
-    '',
-    content,
-    '',
-  ].join('\r\n');
-
-  await new Promise((resolve, reject) => {
-    const socket = net.connect({ host, port, servername: host }, async () => {
-      const write = (line) =>
-        new Promise((resWrite, rejWrite) => {
-          socket.write(line + '\r\n', (err) => (err ? rejWrite(err) : resWrite()));
-        });
-
-      let buf = '';
-      const readCode = () =>
-        new Promise((resRead, rejRead) => {
-          const onData = (chunk) => {
-            buf += chunk.toString('utf8');
-            const lines = buf.split(/\r?\n/).filter(Boolean);
-            const last = lines[lines.length - 1] || '';
-            if (/^\d{3}[\s-]/.test(last) && !/^\d{3}-/.test(last)) {
-              socket.off('data', onData);
-              const code = Number(last.slice(0, 3));
-              resRead({ code, last, buf });
-              buf = '';
-            }
-          };
-          socket.on('data', onData);
-          socket.on('error', rejRead);
-        });
-
-      (async () => {
-        try {
-          let r = await readCode();
-          if (r.code !== 220) throw new Error(`SMTP greeting failed: ${r.last}`);
-
-          await write(`EHLO techtostore.com`);
-          r = await readCode();
-          if (r.code !== 250) throw new Error(`EHLO failed: ${r.last}`);
-
-          await write('AUTH LOGIN');
-          r = await readCode();
-          if (r.code !== 334) throw new Error(`AUTH LOGIN failed: ${r.last}`);
-
-          await write(Buffer.from(user, 'utf8').toString('base64'));
-          r = await readCode();
-          if (r.code !== 334) throw new Error(`SMTP user rejected: ${r.last}`);
-
-          await write(Buffer.from(pass, 'utf8').toString('base64'));
-          r = await readCode();
-          if (r.code !== 235) throw new Error(`SMTP auth failed: ${r.last}`);
-
-          await write(`MAIL FROM:<${from}>`);
-          r = await readCode();
-          if (r.code !== 250) throw new Error(`MAIL FROM failed: ${r.last}`);
-
-          await write(`RCPT TO:<${to}>`);
-          r = await readCode();
-          if (r.code !== 250) throw new Error(`RCPT TO failed: ${r.last}`);
-
-          await write('DATA');
-          r = await readCode();
-          if (r.code !== 354) throw new Error(`DATA failed: ${r.last}`);
-
-          await write(data.replace(/^\./gm, '..') + '\r\n.');
-          r = await readCode();
-          if (r.code !== 250) throw new Error(`Message rejected: ${r.last}`);
-
-          await write('QUIT');
-          socket.end();
-          resolve();
-        } catch (err) {
-          socket.destroy();
-          reject(err);
-        }
-      })();
-    });
-
-    socket.setTimeout(20000, () => {
-      socket.destroy();
-      reject(new Error('SMTP connection timed out'));
-    });
-    socket.on('error', reject);
+  await transporter.sendMail({
+    from: `Tech to Store <${user}>`,
+    to: CONTACT_TO,
+    replyTo: fields.email,
+    subject: fields.subject,
+    text,
   });
+}
+
+async function sendViaWeb3Forms(fields) {
+  const accessKey = process.env.WEB3FORMS_ACCESS_KEY || '';
+  if (!accessKey) {
+    const err = new Error('WEB3FORMS not configured');
+    err.code = 'NO_WEB3FORMS';
+    throw err;
+  }
+
+  const res = await fetch('https://api.web3forms.com/submit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({
+      access_key: accessKey,
+      subject: fields.subject,
+      from_name: fields.name,
+      email: fields.email,
+      phone: fields.phone,
+      business_name: fields.businessName || '(not provided)',
+      message: fields.message,
+      to: CONTACT_TO,
+    }),
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || data.success === false) {
+    throw new Error(data.message || `Web3Forms failed (${res.status})`);
+  }
 }
 
 export default async function handler(req, res) {
@@ -269,30 +169,25 @@ export default async function handler(req, res) {
   const fields = { name, phone, email, businessName, message, subject };
 
   try {
-    const hasSmtp = Boolean(process.env.SMTP_USER && process.env.SMTP_PASS);
-    if (hasSmtp) {
+    if (process.env.SMTP_USER && process.env.SMTP_PASS) {
       await sendViaSmtp(fields);
+    } else if (process.env.WEB3FORMS_ACCESS_KEY) {
+      await sendViaWeb3Forms(fields);
     } else {
-      await sendViaFormSubmit(fields);
-    }
-    res.status(200).json({ ok: true });
-  } catch (err) {
-    const messageText = err?.message || 'Could not send your message.';
-    console.error('api/contact delivery error', messageText);
-    if (err?.code === 'NEEDS_ACTIVATION' || /activat/i.test(messageText)) {
       res.status(503).json({
         ok: false,
-        error:
-          'Email delivery is almost ready — check contact@techtostore.com for a FormSubmit activation link, click it once, then try again.',
+        error: 'Server email is not configured.',
+        code: 'NO_SERVER_MAIL',
       });
       return;
     }
+    res.status(200).json({ ok: true });
+  } catch (err) {
+    console.error('api/contact delivery error', err?.message || err);
     res.status(502).json({
       ok: false,
-      error: messageText.includes('SMTP')
-        ? 'Email server rejected the message. Please email contact@techtostore.com directly.'
-        : 'Could not send your message. Please email contact@techtostore.com directly.',
-      detail: messageText.slice(0, 240),
+      error:
+        'Could not send your message. Please email contact@techtostore.com directly.',
     });
   }
 }

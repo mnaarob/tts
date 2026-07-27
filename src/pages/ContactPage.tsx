@@ -28,6 +28,14 @@ export function ContactPage() {
     e.preventDefault();
     setError('');
 
+    // Contact email provider is activated for www — never submit from apex.
+    if (window.location.hostname === 'techtostore.com') {
+      window.location.replace(
+        `https://www.techtostore.com/${window.location.hash || '#/contact'}`,
+      );
+      return;
+    }
+
     if (TURNSTILE_SITE_KEY && !captchaToken) {
       setError('Complete the verification below.');
       return;
