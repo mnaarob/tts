@@ -40,6 +40,9 @@ async function postJson(
       Accept: 'application/json',
     },
     body: JSON.stringify(body),
+    // Avoid opaque failures on some mobile browsers / private modes
+    credentials: 'omit',
+    mode: 'cors',
   });
   const contentType = res.headers.get('content-type') || '';
   const data = (await res.json().catch(() => ({}))) as {
@@ -53,7 +56,7 @@ async function postJson(
 
 function activationOrDetail(detail: string): string {
   if (/activat/i.test(detail)) {
-    return 'Email delivery is almost ready — check contact@techtostore.com for a FormSubmit activation link, click it once, then try again.';
+    return 'Email delivery is almost ready — open this site as www.techtostore.com, check contact@techtostore.com for a FormSubmit activation link, click it once, then try again.';
   }
   return (
     detail ||
@@ -61,9 +64,67 @@ function activationOrDetail(detail: string): string {
   );
 }
 
+/** Classic form POST — works on iOS when fetch to FormSubmit is blocked. */
+function submitViaHiddenForm(fields: Record<string, string>): Promise<boolean> {
+  return new Promise((resolve) => {
+    const frameName = `contact_fs_${Date.now()}`;
+    const iframe = document.createElement('iframe');
+    iframe.name = frameName;
+    iframe.title = 'contact-submit';
+    iframe.setAttribute('aria-hidden', 'true');
+    iframe.style.cssText = 'position:absolute;width:0;height:0;border:0;visibility:hidden';
+    document.body.appendChild(iframe);
+
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = `https://formsubmit.co/${encodeURIComponent(CONTACT_TO)}`;
+    form.target = frameName;
+    form.style.display = 'none';
+    form.acceptCharset = 'UTF-8';
+
+    const add = (name: string, value: string) => {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = name;
+      input.value = value;
+      form.appendChild(input);
+    };
+
+    Object.entries(fields).forEach(([k, v]) => add(k, v));
+    add('_captcha', 'false');
+    add('_template', 'table');
+    // Stay on page; iframe receives the response
+    add('_next', 'https://www.techtostore.com/#/contact?sent=1');
+
+    document.body.appendChild(form);
+
+    let settled = false;
+    const finish = (ok: boolean) => {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timer);
+      iframe.removeEventListener('load', onLoad);
+      form.remove();
+      // Delay iframe removal so the POST can complete
+      window.setTimeout(() => iframe.remove(), 1500);
+      resolve(ok);
+    };
+
+    const onLoad = () => finish(true);
+    iframe.addEventListener('load', onLoad);
+    const timer = window.setTimeout(() => finish(true), 2500);
+
+    try {
+      form.submit();
+    } catch {
+      finish(false);
+    }
+  });
+}
+
 /**
  * Deliver contact form to CONTACT_TO.
- * Order: same-origin Vercel `/api/contact` → Supabase edge → FormSubmit browser fallback.
+ * Prefer browser FormSubmit (works for www), then same-origin API, then form POST fallback for mobile.
  */
 export async function submitContactForm(
   payload: ContactPayload,
@@ -83,64 +144,14 @@ export async function submitContactForm(
     captchaToken,
   };
 
+  const subject = businessName
+    ? `Website inquiry from ${name} (${businessName})`
+    : `Website inquiry from ${name}`;
+
   let lastError = '';
 
-  // 1) Same-origin API on Vercel production (and preview)
+  // 1) Browser FormSubmit first — reliable on desktop/www once activated
   try {
-    const { res, data, contentType } = await postJson('/api/contact', body);
-    if (res.ok && data.ok) return { ok: true };
-
-    const isJson = contentType.includes('application/json');
-    // Local Vite has no /api — skip. Validation errors (4xx) should surface.
-    if (isJson && res.status >= 400 && res.status < 500) {
-      return {
-        ok: false,
-        error: activationOrDetail(data.error || data.message || ''),
-      };
-    }
-    if (isJson && res.status >= 500) {
-      lastError = activationOrDetail(data.error || data.message || '');
-      // fall through — server FormSubmit often blocked from datacenter IPs
-    }
-  } catch {
-    // fall through (local Vite has no /api route)
-  }
-
-  // 2) Supabase edge function when deployed
-  try {
-    const { supabase } = await import('./supabase');
-    const { data, error } = await supabase.functions.invoke('contact-form', {
-      body,
-    });
-
-    if (!error) {
-      const payloadRes = data as { ok?: boolean; error?: string } | null;
-      if (payloadRes?.ok) return { ok: true };
-      if (payloadRes?.error) {
-        lastError = payloadRes.error;
-        // validation-style messages should stop; delivery failures fall through
-        if (/please enter|verification|complete the/i.test(payloadRes.error)) {
-          return { ok: false, error: payloadRes.error };
-        }
-      }
-    } else {
-      const msg = error.message || '';
-      const missing =
-        /Failed to send a request|not found|404|FunctionsFetchError|non-2xx/i.test(
-          msg,
-        );
-      if (!missing) lastError = msg;
-    }
-  } catch {
-    // fall through to FormSubmit
-  }
-
-  // 3) Direct FormSubmit from the browser (works after one-time email activation)
-  try {
-    const subject = businessName
-      ? `Website inquiry from ${name} (${businessName})`
-      : `Website inquiry from ${name}`;
-
     const { res, data } = await postJson(
       `https://formsubmit.co/ajax/${encodeURIComponent(CONTACT_TO)}`,
       {
@@ -156,22 +167,75 @@ export async function submitContactForm(
       },
     );
 
-    if (!res.ok || formFailed(data)) {
+    if (res.ok && !formFailed(data)) return { ok: true };
+
+    lastError = activationOrDetail(data.error || data.message || '');
+    // Apex host often needs a separate FormSubmit activation — surface that clearly
+    if (/activat/i.test(data.message || data.error || '')) {
+      return { ok: false, error: lastError };
+    }
+  } catch {
+    // Mobile browsers / content blockers often block this fetch — keep going
+  }
+
+  // 2) Same-origin Vercel API
+  try {
+    const { res, data, contentType } = await postJson('/api/contact', body);
+    if (res.ok && data.ok) return { ok: true };
+
+    const isJson = contentType.includes('application/json');
+    if (isJson && res.status >= 400 && res.status < 500) {
       return {
         ok: false,
-        error: activationOrDetail(
-          data.error || data.message || lastError || '',
-        ),
+        error: activationOrDetail(data.error || data.message || ''),
       };
     }
-
-    return { ok: true };
+    if (isJson && (data.error || data.message)) {
+      lastError = activationOrDetail(data.error || data.message || '');
+    }
   } catch {
-    return {
-      ok: false,
-      error:
-        lastError ||
-        'Could not send your message. Please email contact@techtostore.com directly.',
-    };
+    // local Vite / network
   }
+
+  // 3) Supabase edge (if deployed)
+  try {
+    const { supabase } = await import('./supabase');
+    const { data, error } = await supabase.functions.invoke('contact-form', {
+      body,
+    });
+
+    if (!error) {
+      const payloadRes = data as { ok?: boolean; error?: string } | null;
+      if (payloadRes?.ok) return { ok: true };
+      if (payloadRes?.error) {
+        lastError = payloadRes.error;
+        if (/please enter|verification|complete the|activat/i.test(payloadRes.error)) {
+          return { ok: false, error: payloadRes.error };
+        }
+      }
+    }
+  } catch {
+    // ignore
+  }
+
+  // 4) Hidden form POST — more reliable on iPhone Safari / content blockers
+  if (typeof document !== 'undefined') {
+    const ok = await submitViaHiddenForm({
+      name,
+      phone,
+      email,
+      business_name: businessName || '(not provided)',
+      message,
+      _subject: subject,
+      _replyto: email,
+    });
+    if (ok) return { ok: true };
+  }
+
+  return {
+    ok: false,
+    error:
+      lastError ||
+      'Could not send your message. Please email contact@techtostore.com directly.',
+  };
 }

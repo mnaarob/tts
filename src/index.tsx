@@ -1,7 +1,22 @@
 import './index.css';
-import React from "react";
-import { createRoot } from "react-dom/client";
-import { App } from "./App";
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import { App } from './App';
+
+// FormSubmit (contact form) is activated for www — keep a single canonical host.
+(function canonicalWww() {
+  const { hostname, protocol, pathname, search, hash } = window.location;
+  if (hostname === 'techtostore.com') {
+    window.location.replace(
+      `https://www.techtostore.com${pathname}${search}${hash}`,
+    );
+  }
+  if (hostname === 'www.techtostore.com' && protocol === 'http:') {
+    window.location.replace(
+      `https://www.techtostore.com${pathname}${search}${hash}`,
+    );
+  }
+})();
 
 // Supabase redirects with tokens in the hash fragment:
 //   /#access_token=xxx&type=recovery
@@ -24,6 +39,6 @@ import { App } from "./App";
   }
 })();
 
-const container = document.getElementById("root");
+const container = document.getElementById('root');
 const root = createRoot(container!);
 root.render(<App />);
