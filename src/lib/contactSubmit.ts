@@ -23,7 +23,16 @@ function formFailed(data: {
 async function postJson(
   url: string,
   body: Record<string, unknown>,
-): Promise<{ res: Response; data: { ok?: boolean; success?: string | boolean; error?: string; message?: string } }> {
+): Promise<{
+  res: Response;
+  data: {
+    ok?: boolean;
+    success?: string | boolean;
+    error?: string;
+    message?: string;
+  };
+  contentType: string;
+}> {
   const res = await fetch(url, {
     method: 'POST',
     headers: {
@@ -32,13 +41,24 @@ async function postJson(
     },
     body: JSON.stringify(body),
   });
+  const contentType = res.headers.get('content-type') || '';
   const data = (await res.json().catch(() => ({}))) as {
     ok?: boolean;
     success?: string | boolean;
     error?: string;
     message?: string;
   };
-  return { res, data };
+  return { res, data, contentType };
+}
+
+function activationOrDetail(detail: string): string {
+  if (/activat/i.test(detail)) {
+    return 'Email delivery is almost ready — check contact@techtostore.com for a FormSubmit activation link, click it once, then try again.';
+  }
+  return (
+    detail ||
+    'Could not send your message. Please email contact@techtostore.com directly.'
+  );
 }
 
 /**
@@ -63,20 +83,24 @@ export async function submitContactForm(
     captchaToken,
   };
 
+  let lastError = '';
+
   // 1) Same-origin API on Vercel production (and preview)
   try {
-    const { res, data } = await postJson('/api/contact', body);
-    // Vite local has no /api — treat HTML/404 as skip
-    const contentType = res.headers.get('content-type') || '';
+    const { res, data, contentType } = await postJson('/api/contact', body);
     if (res.ok && data.ok) return { ok: true };
-    if (res.status !== 404 && contentType.includes('application/json')) {
+
+    const isJson = contentType.includes('application/json');
+    // Local Vite has no /api — skip. Validation errors (4xx) should surface.
+    if (isJson && res.status >= 400 && res.status < 500) {
       return {
         ok: false,
-        error:
-          data.error ||
-          data.message ||
-          'Could not send your message. Please email contact@techtostore.com directly.',
+        error: activationOrDetail(data.error || data.message || ''),
       };
+    }
+    if (isJson && res.status >= 500) {
+      lastError = activationOrDetail(data.error || data.message || '');
+      // fall through — server FormSubmit often blocked from datacenter IPs
     }
   } catch {
     // fall through (local Vite has no /api route)
@@ -92,22 +116,26 @@ export async function submitContactForm(
     if (!error) {
       const payloadRes = data as { ok?: boolean; error?: string } | null;
       if (payloadRes?.ok) return { ok: true };
-      if (payloadRes?.error) return { ok: false, error: payloadRes.error };
+      if (payloadRes?.error) {
+        lastError = payloadRes.error;
+        // validation-style messages should stop; delivery failures fall through
+        if (/please enter|verification|complete the/i.test(payloadRes.error)) {
+          return { ok: false, error: payloadRes.error };
+        }
+      }
     } else {
       const msg = error.message || '';
       const missing =
         /Failed to send a request|not found|404|FunctionsFetchError|non-2xx/i.test(
           msg,
         );
-      if (!missing) {
-        return { ok: false, error: msg || 'Could not send your message.' };
-      }
+      if (!missing) lastError = msg;
     }
   } catch {
     // fall through to FormSubmit
   }
 
-  // 3) Direct FormSubmit from the browser
+  // 3) Direct FormSubmit from the browser (works after one-time email activation)
   try {
     const subject = businessName
       ? `Website inquiry from ${name} (${businessName})`
@@ -129,19 +157,11 @@ export async function submitContactForm(
     );
 
     if (!res.ok || formFailed(data)) {
-      const detail = data.error || data.message || '';
-      if (/activat/i.test(detail)) {
-        return {
-          ok: false,
-          error:
-            'Email delivery is almost ready — check contact@techtostore.com for a FormSubmit activation link, click it once, then try again.',
-        };
-      }
       return {
         ok: false,
-        error:
-          detail ||
-          'Could not send your message. Please email contact@techtostore.com directly.',
+        error: activationOrDetail(
+          data.error || data.message || lastError || '',
+        ),
       };
     }
 
@@ -150,6 +170,7 @@ export async function submitContactForm(
     return {
       ok: false,
       error:
+        lastError ||
         'Could not send your message. Please email contact@techtostore.com directly.',
     };
   }
