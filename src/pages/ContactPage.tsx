@@ -81,10 +81,12 @@ export function ContactPage() {
             </span>
           </Link>
           <h1 className="font-display text-center text-2xl sm:text-3xl font-bold tracking-brand text-ink">
-            Talk to us
+            {sent ? 'Thank you' : 'Talk to us'}
           </h1>
           <p className="mt-3 text-center text-muted text-sm sm:text-base leading-relaxed">
-            Tell us about your store — we&apos;ll get back to you at the email you provide.
+            {sent
+              ? 'We appreciate your message and will reach out shortly.'
+              : "Tell us about your store — we'll get back to you at the email you provide."}
           </p>
         </div>
 
@@ -95,9 +97,9 @@ export function ContactPage() {
                 <div className="w-14 h-14 bg-pin/15 rounded-full flex items-center justify-center mx-auto mb-4">
                   <CheckCircle2 className="w-7 h-7 text-pin" />
                 </div>
-                <h2 className="font-display text-xl font-bold text-ink mb-2">Message sent</h2>
+                <h2 className="font-display text-xl font-bold text-ink mb-2">Message received</h2>
                 <p className="text-sm text-muted leading-relaxed mb-6">
-                  Thanks — we received your note and will reply soon.
+                  A member of our team will follow up at the email you provided.
                 </p>
                 <Link to="/" className="btn-primary">
                   Back to home

@@ -1,5 +1,9 @@
 const CONTACT_TO = 'contact@techtostore.com';
 
+const CLIENT_RATE_KEY = 'tts_contact_sends';
+const CLIENT_RATE_WINDOW_MS = 60 * 60 * 1000;
+const CLIENT_RATE_MAX = 4;
+
 export type ContactPayload = {
   name: string;
   phone: string;
@@ -28,6 +32,47 @@ function activationOrDetail(detail: string): string {
     detail ||
     'Could not send your message. Please email contact@techtostore.com directly.'
   );
+}
+
+function readClientHits(): number[] {
+  try {
+    const raw = localStorage.getItem(CLIENT_RATE_KEY);
+    const parsed = raw ? (JSON.parse(raw) as number[]) : [];
+    const now = Date.now();
+    return parsed.filter((t) => now - t < CLIENT_RATE_WINDOW_MS);
+  } catch {
+    return [];
+  }
+}
+
+function checkClientRateLimit(): SubmitResult | null {
+  if (typeof localStorage === 'undefined') return null;
+  const hits = readClientHits();
+  if (hits.length >= CLIENT_RATE_MAX) {
+    return {
+      ok: false,
+      error: 'Too many messages from this device. Please try again in an hour.',
+    };
+  }
+  const last = hits[hits.length - 1];
+  if (last && Date.now() - last < 45_000) {
+    return {
+      ok: false,
+      error: 'Please wait a moment before sending another message.',
+    };
+  }
+  return null;
+}
+
+function recordClientHit() {
+  if (typeof localStorage === 'undefined') return;
+  try {
+    const hits = readClientHits();
+    hits.push(Date.now());
+    localStorage.setItem(CLIENT_RATE_KEY, JSON.stringify(hits));
+  } catch {
+    // private mode / blocked storage
+  }
 }
 
 async function postJson(
@@ -116,10 +161,27 @@ export async function submitContactForm(
 
   let lastError = '';
 
+  const clientBlocked = checkClientRateLimit();
+  if (clientBlocked) return clientBlocked;
+
   // 1) Same-origin API (SMTP / Web3Forms when configured on Vercel) — best for phones
   try {
     const { res, data } = await postJson('/api/contact', apiBody);
-    if (res.ok && data.ok) return { ok: true };
+    if (res.ok && data.ok) {
+      recordClientHit();
+      return { ok: true };
+    }
+
+    // Do not fall through when rate-limited — FormSubmit would bypass the limit
+    if (res.status === 429 || data.code === 'RATE_LIMIT') {
+      return {
+        ok: false,
+        error: activationOrDetail(
+          data.error ||
+            'Too many messages. Please try again in an hour.',
+        ),
+      };
+    }
 
     if (data.code !== 'NO_SERVER_MAIL' && res.status !== 404) {
       if (res.status >= 400 && res.status < 500) {
@@ -151,7 +213,10 @@ export async function submitContactForm(
       },
     );
 
-    if (res.ok && !formFailed(data)) return { ok: true };
+    if (res.ok && !formFailed(data)) {
+      recordClientHit();
+      return { ok: true };
+    }
 
     lastError = activationOrDetail(data.error || data.message || '');
     if (/activat/i.test(data.message || data.error || '')) {
@@ -175,7 +240,10 @@ export async function submitContactForm(
       _captcha: 'false',
     });
 
-    if (res.ok && !formFailed(data)) return { ok: true };
+    if (res.ok && !formFailed(data)) {
+      recordClientHit();
+      return { ok: true };
+    }
 
     lastError = activationOrDetail(data.error || data.message || '');
     if (/activat/i.test(data.message || data.error || '')) {
