@@ -9,6 +9,8 @@ html {
   /* Prevent iOS Safari from "auto-zooming" text after the soft keyboard
      opens / closes on landscape orientation changes. */
   -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  touch-action: manipulation;
 }
 
 body {
@@ -16,6 +18,8 @@ body {
   -webkit-font-smoothing: antialiased;
   background-color: #F7F8FA;
   color: #111111;
+  touch-action: manipulation;
+  overscroll-behavior-y: none;
 }
 
 ::selection {
@@ -33,7 +37,7 @@ body {
   }
 
   .form-input {
-    @apply w-full border border-line rounded-lg px-3.5 py-2.5 text-sm bg-white text-ink placeholder:text-muted/70 focus:outline-none focus:ring-2 focus:ring-crimson/20 focus:border-crimson transition-colors;
+    @apply w-full border border-line rounded-lg px-3.5 py-2.5 text-base sm:text-sm bg-white text-ink placeholder:text-muted/70 focus:outline-none focus:ring-2 focus:ring-crimson/20 focus:border-crimson transition-colors;
   }
 
   .form-link {
@@ -43,16 +47,15 @@ body {
 
 /*
  * iOS Safari auto-zooms a form control when its computed font-size is
- * < 16 px and the user taps to focus it. The zoom is rarely undone on
- * blur, so the entire app appears "zoomed in for no reason" after a
- * refresh. Force at least 16 px on phones; layout still uses Tailwind's
- * `text-sm` everywhere else (sm: breakpoint up).
+ * < 16 px and the user taps to focus it. Keep inputs at least 16 px on
+ * phones, and prefer no accidental double-tap zoom via touch-action above.
  */
 @media (max-width: 768px) {
   input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']),
   select,
-  textarea {
-    font-size: 16px;
+  textarea,
+  .form-input {
+    font-size: 16px !important;
   }
 }
 

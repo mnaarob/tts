@@ -85,6 +85,61 @@ async function verifyTurnstile(token, secret, remoteIp) {
   return Boolean(data?.success);
 }
 
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function buildContactEmail(fields) {
+  const rows = [
+    ['name', fields.name],
+    ['phone', fields.phone],
+    ['email', fields.email],
+    ['business_name', fields.businessName || '(not provided)'],
+    ['message', fields.message],
+  ];
+
+  const text = [
+    "Here's what they had to say:",
+    '',
+    ...rows.map(([k, v]) => `${k}: ${v}`),
+  ].join('\n');
+
+  const tableRows = rows
+    .map(
+      ([name, value], i) => `
+      <tr style="background:${i % 2 === 0 ? '#ffffff' : '#f9fafb'};">
+        <td style="padding:10px 12px;border:1px solid #e5e7eb;font-family:Helvetica,Arial,sans-serif;font-size:14px;font-weight:700;color:#111827;vertical-align:top;width:28%;">${escapeHtml(name)}</td>
+        <td style="padding:10px 12px;border:1px solid #e5e7eb;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:14px;color:#111827;vertical-align:top;white-space:pre-wrap;">${escapeHtml(value)}</td>
+      </tr>`,
+    )
+    .join('');
+
+  const html = `<!DOCTYPE html>
+<html>
+<body style="margin:0;padding:16px;background:#ffffff;color:#111827;">
+  <p style="font-family:Helvetica,Arial,sans-serif;font-size:15px;margin:0 0 16px;">Here's what they had to say:</p>
+  <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;max-width:640px;border-collapse:collapse;border:1px solid #e5e7eb;">
+    <thead>
+      <tr>
+        <th align="left" style="padding:10px 12px;background:#1e3a5f;color:#ffffff;font-family:Helvetica,Arial,sans-serif;font-size:14px;font-weight:700;border:1px solid #1e3a5f;">Name</th>
+        <th align="left" style="padding:10px 12px;background:#1e3a5f;color:#ffffff;font-family:Helvetica,Arial,sans-serif;font-size:14px;font-weight:700;border:1px solid #1e3a5f;">Value</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${tableRows}
+    </tbody>
+  </table>
+</body>
+</html>`;
+
+  return { text, html };
+}
+
 async function sendViaSmtp(fields) {
   const host = process.env.SMTP_HOST || 'mail.privateemail.com';
   const port = Number(process.env.SMTP_PORT || '465');
@@ -103,19 +158,7 @@ async function sendViaSmtp(fields) {
     auth: { user, pass },
   });
 
-  const text = [
-    'New message from the Tech to Store website contact form.',
-    '',
-    `Name: ${fields.name}`,
-    `Phone: ${fields.phone}`,
-    `Email: ${fields.email}`,
-    `Business name: ${fields.businessName || '(not provided)'}`,
-    '',
-    'Message:',
-    fields.message,
-    '',
-    `— sent ${new Date().toISOString()}`,
-  ].join('\n');
+  const { text, html } = buildContactEmail(fields);
 
   await transporter.sendMail({
     from: `Tech to Store <${user}>`,
@@ -123,6 +166,7 @@ async function sendViaSmtp(fields) {
     replyTo: fields.email,
     subject: fields.subject,
     text,
+    html,
   });
 }
 
