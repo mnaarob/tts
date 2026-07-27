@@ -4,23 +4,23 @@ import { Quote } from 'lucide-react';
 const testimonials = [
 {
   quote:
-  'Tech to Store transformed our online presence. Sales up 40% in 3 months. The team understood exactly what we needed as a local retailer.',
+  'Working with Tech to Store helped us rethink how we show up online as a local retailer. Conversations were practical and focused on our store.',
   author: 'Sarah Chen',
   role: 'Owner, Maple Goods Co.',
   image: 'SC'
 },
 {
   quote:
-  "Best decision for our business. The SEO results speak for themselves. We're finally ranking on the first page for our key terms.",
+  'We appreciated clear guidance on local search basics. Results depend on the market and ongoing effort — they were upfront about that.',
   author: 'James Park',
   role: 'Founder, Northern Supply',
   image: 'JP'
 },
 {
   quote:
-  'Professional, responsive, and truly understands Canadian small business. It feels like having an in-house tech team.',
+  'Responsive and thoughtful about small retailers in Canada and the U.S. It felt collaborative while the project is still early.',
   author: 'Maria Santos',
-  role: 'CEO, Coastal Crafts',
+  role: 'Owner, Coastal Crafts',
   image: 'MS'
 }];
 
@@ -30,11 +30,11 @@ export function Testimonials() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
-            Trusted by Canadian Leaders
+            Notes from early conversations
           </h2>
           <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-            Join hundreds of businesses that rely on Tech to Store for their
-            digital success.
+            Illustrative quotes from exploratory discussions — not guarantees
+            of results or a claim about client volume.
           </p>
         </div>
 

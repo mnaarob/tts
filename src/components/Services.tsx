@@ -5,25 +5,25 @@ const services = [
     num: '01',
     title: 'Websites',
     description:
-      'Fast, accessible storefronts that feel like your shop — not a template farm.',
+      'Storefronts designed to feel like your shop — clear, practical, and built around how you sell.',
   },
   {
     num: '02',
     title: 'Local SEO',
     description:
-      'Get found by the people already looking for you in your neighbourhood.',
+      'Practical setup to help neighbourhood customers discover you online — results vary by market and effort.',
   },
   {
     num: '03',
     title: 'Inventory',
     description:
-      'Real-time stock visibility across shelves, so nothing sells that you cannot fulfil.',
+      'Tools meant to help you see stock across shelves before you sell what you cannot fulfil.',
   },
   {
     num: '04',
     title: 'Mobile application',
     description:
-      'Cross-platform apps for both iOS and Android — one build, ready for the App Store and Google Play.',
+      'Cross-platform apps for iOS and Android — subject to each app store’s review and policies.',
   },
 ];
 

@@ -13,11 +13,13 @@ export function Footer() {
               </span>
             </div>
             <p className="text-sm leading-relaxed max-w-sm text-white/55">
-              Digital systems for stores that sell real things — websites, local
-              SEO, inventory, and mobile applications built in Winnipeg.
+              An early-stage initiative exploring websites, local SEO,
+              inventory tools, and mobile apps for retailers — based in
+              Winnipeg.
             </p>
             <p className="mt-4 text-sm text-white/80">
-              Proudly based in Winnipeg, Manitoba, Canada.
+              Based in Winnipeg, Manitoba, Canada. Not yet a registered
+              corporation.
             </p>
           </div>
 
@@ -41,7 +43,7 @@ export function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-white transition-colors">
-                  Terms of Service
+                  Terms of Use
                 </a>
               </li>
               <li>
@@ -74,7 +76,7 @@ export function Footer() {
 
         <div className="pt-8 border-t border-white/10 flex flex-col sm:flex-row justify-between gap-3 text-xs text-white/40">
           <p>© {new Date().getFullYear()} Tech to Store</p>
-          <p>Built in Winnipeg, serving coast to coast.</p>
+          <p>Winnipeg-based · Exploring markets in Canada and the U.S.</p>
         </div>
       </div>
     </footer>

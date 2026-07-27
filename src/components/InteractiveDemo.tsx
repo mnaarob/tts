@@ -141,7 +141,7 @@ const CHAPTERS: Chapter[] = [
   {
     id: 'seo',
     name: 'Local SEO',
-    tagline: 'Get found on Google by people nearby',
+    tagline: 'Help nearby people find you on search',
     Icon: Search,
     accentText: 'text-blue-700',
     accentBg: 'bg-blue-500',
@@ -300,7 +300,7 @@ export function InteractiveDemo() {
             See it in action
           </span>
           <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-slate-900 leading-tight">
-            How Tech to Store grows your business, step by step
+            How Tech to Store approaches a store project, step by step
           </h2>
           <p className="mt-5 text-lg text-slate-600">
             A guided tour of inventory, electronic shelf labels, local SEO and your new website

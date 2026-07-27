@@ -32,11 +32,11 @@ export function Hero() {
             Tech to Store
           </h1>
           <p className="font-serif text-lg sm:text-2xl md:text-3xl text-white/95 leading-snug mb-2 sm:mb-4 max-w-xl">
-            Digital systems for stores that sell real things.
+            Digital tools for stores that sell real things.
           </p>
           <p className="text-sm sm:text-base md:text-lg text-white/70 leading-relaxed mb-5 sm:mb-8 max-w-lg">
-            Winnipeg-based websites, local SEO, and inventory systems for
-            Canadian retailers.
+            An early-stage Winnipeg initiative exploring websites, local SEO,
+            and inventory tools with retailers in Canada and the United States.
           </p>
           <Link
             to="/contact"

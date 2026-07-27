@@ -37,7 +37,7 @@ export function CheckoutPage() {
           </Link>
           <div className="flex items-center gap-2 text-sm text-muted">
             <Lock className="w-4 h-4" />
-            <span>Secure Checkout</span>
+            <span>Encrypted checkout form</span>
           </div>
         </div>
       </header>
@@ -73,7 +73,7 @@ export function CheckoutPage() {
                 Finalize Your Order
               </h1>
               <p className="text-muted mb-8">
-                Complete your details below to get started with Tech to Store.
+                Complete your details below to continue exploring Tech to Store.
               </p>
 
               <div className="bg-white p-6 rounded-2xl shadow-sm border border-line space-y-6">
@@ -293,19 +293,19 @@ export function CheckoutPage() {
                   <ul className="space-y-3">
                     <li className="flex items-start gap-3 text-sm">
                       <Check className="w-5 h-5 text-pin flex-shrink-0" />
-                      <span>Professional Website Creation</span>
+                      <span>Website design &amp; build (as scoped)</span>
                     </li>
                     <li className="flex items-start gap-3 text-sm">
                       <Check className="w-5 h-5 text-pin flex-shrink-0" />
-                      <span>SEO Optimization Setup</span>
+                      <span>Local SEO setup guidance</span>
                     </li>
                     <li className="flex items-start gap-3 text-sm">
                       <Check className="w-5 h-5 text-pin flex-shrink-0" />
-                      <span>Winnipeg-Based Support</span>
+                      <span>Winnipeg-based contact</span>
                     </li>
                     <li className="flex items-start gap-3 text-sm">
                       <Check className="w-5 h-5 text-pin flex-shrink-0" />
-                      <span>Mobile Responsive Design</span>
+                      <span>Responsive layout for common devices</span>
                     </li>
                   </ul>
                 </div>

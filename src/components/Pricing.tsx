@@ -8,15 +8,15 @@ const plans = [
   name: 'Starter',
   price: '$799',
   period: 'one-time',
-  description: 'Perfect for small businesses just getting started online.',
+  description: 'A starting point for small shops exploring a first online presence.',
   features: [
-  'Professional Website',
-  'Basic SEO Setup',
-  'Mobile Responsive',
-  'SSL Security',
-  'Monthly Analytics Report'],
+  'Website build (as scoped)',
+  'Basic local SEO setup',
+  'Responsive layout',
+  'HTTPS via hosting provider',
+  'Simple analytics overview'],
 
-  cta: 'Get Started',
+  cta: 'Continue',
   popular: false
 },
 {
@@ -24,16 +24,16 @@ const plans = [
   name: 'Professional',
   price: '$1,499',
   period: 'one-time',
-  description: 'Comprehensive solution for growing businesses.',
+  description: 'A broader scope for shops growing their digital footprint.',
   features: [
   'Everything in Starter',
-  'Advanced SEO Strategy',
-  'Priority Support',
-  'Content Updates (2 hrs/mo)',
-  'Performance Optimization',
-  'Quarterly Strategy Call'],
+  'Expanded SEO setup guidance',
+  'Priority email contact',
+  'Content help (up to 2 hrs/mo, if agreed)',
+  'Performance review basics',
+  'Optional check-in call'],
 
-  cta: 'Get Started',
+  cta: 'Continue',
   popular: true
 },
 {
@@ -41,16 +41,16 @@ const plans = [
   name: 'Enterprise',
   price: '$1,999',
   period: 'one-time',
-  description: 'Tailored solutions for large-scale operations.',
+  description: 'Custom scoping for multi-location or more complex needs.',
   features: [
-  'Full Custom Website',
-  'Dedicated Account Manager',
-  'Custom Integrations',
-  '24/7 Priority Support',
-  'Multi-location SEO',
-  'Inventory Management Beta'],
+  'Custom website scope',
+  'Named contact for the project',
+  'Integrations as agreed in writing',
+  'Email contact during project hours',
+  'Multi-location SEO guidance',
+  'Inventory tools (preview / as available)'],
 
-  cta: 'Get Started',
+  cta: 'Continue',
   popular: false
 }];
 
@@ -60,11 +60,11 @@ export function Pricing() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
-            Simple, Transparent Pricing
+            Example project ranges
           </h2>
           <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-            Choose the plan that fits your business stage. One-time investment,
-            lifetime value.
+            Illustrative one-time ranges for discussion. Final scope and price
+            are confirmed in writing before work begins.
           </p>
         </div>
 

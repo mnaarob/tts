@@ -1,61 +1,72 @@
 import { LegalPageLayout } from '../components/LegalPageLayout';
 
-const UPDATED = 'July 26, 2026';
+const UPDATED = 'July 27, 2026';
 
 export function TermsOfServicePage() {
   return (
-    <LegalPageLayout title="Terms of Service" updated={UPDATED}>
+    <LegalPageLayout title="Terms of Use" updated={UPDATED}>
       <p>
-        These Terms of Service (&ldquo;Terms&rdquo;) govern your access to and
-        use of the website at{' '}
+        These Terms of Use (&ldquo;Terms&rdquo;) govern access to and use of{' '}
         <a href="https://techtostore.com">techtostore.com</a> (the
-        &ldquo;Site&rdquo;) and any related products or services offered by Tech
-        to Store (&ldquo;Tech to Store,&rdquo; &ldquo;we,&rdquo;
-        &ldquo;us,&rdquo; or &ldquo;our&rdquo;), including websites, local SEO,
-        inventory systems, and mobile applications (collectively, the
-        &ldquo;Services&rdquo;).
+        &ldquo;Site&rdquo;) and related previews, tools, or project work offered
+        under the name Tech to Store (&ldquo;Tech to Store,&rdquo;
+        &ldquo;we,&rdquo; &ldquo;us,&rdquo; or &ldquo;our&rdquo;). Tech to Store
+        is an early-stage initiative based in Winnipeg, Manitoba, Canada. It is
+        not yet a registered corporation. We are observing and exploring demand
+        for digital tools among retailers in Canada and the United States.
       </p>
       <p>
-        By accessing the Site or using the Services, you agree to these Terms
-        and our Privacy Policy. If you do not agree, do not use the Site or
-        Services. If you accept on behalf of a business, you represent that you
-        have authority to bind that business.
+        By using the Site or related Services, you agree to these Terms and our
+        Privacy Policy. If you do not agree, do not use the Site or Services.
+        If you accept on behalf of a business, you represent that you have
+        authority to do so.
+      </p>
+      <p>
+        These Terms are informational site rules for an exploratory project.
+        They are not a substitute for a signed project agreement, and they are
+        not legal advice.
       </p>
 
       <h2>1. Who we are</h2>
       <p>
-        Tech to Store operates from Winnipeg, Manitoba, Canada. Contact:{' '}
+        Contact:{' '}
         <a href="mailto:contact@techtostore.com">contact@techtostore.com</a>.
+        Location of operators: Winnipeg, Manitoba, Canada. Status: early-stage,
+        not yet incorporated.
       </p>
 
-      <h2>2. Description of services</h2>
+      <h2>2. Nature of the Services</h2>
       <p>
-        We provide digital services for retailers and brands, which may
-        include design and development of websites, local search optimization,
-        inventory and operations software, and cross-platform mobile
-        applications for iOS and Android. Specific deliverables, timelines,
-        fees, and acceptance criteria for paid engagements are set out in a
-        separate proposal, statement of work, or order form (each a
-        &ldquo;Project Agreement&rdquo;). If there is a conflict between these
-        Terms and a Project Agreement, the Project Agreement controls for that
-        engagement.
+        We may discuss or provide exploratory digital work such as websites,
+        local SEO guidance, inventory-related software previews, and
+        cross-platform mobile app development concepts. Availability, features,
+        and pricing may change as we learn. Any paid engagement should be set
+        out in a separate written proposal or statement of work (a
+        &ldquo;Project Note&rdquo;). If a Project Note conflicts with these
+        Terms for that engagement, the Project Note controls for that work.
+      </p>
+      <p>
+        Nothing on the Site is an offer to form a partnership, joint venture,
+        employment relationship, or franchise. Nothing guarantees business
+        results, rankings, traffic, sales, app-store approval, or uptime.
       </p>
 
       <h2>3. Eligibility and accounts</h2>
       <ul>
-        <li>You must be at least the age of majority in your province or territory of residence.</li>
         <li>
-          You are responsible for maintaining the confidentiality of account
-          credentials and for all activity under your account.
+          You must be at least the age of majority where you live (province,
+          territory, or U.S. state).
         </li>
         <li>
-          You must provide accurate information and promptly update it.
-          We may suspend or terminate accounts that are inaccurate, inactive,
-          or used in breach of these Terms.
+          You are responsible for account credentials and activity under your
+          account.
         </li>
         <li>
-          Invited team members access Services only as authorized by the
-          account owner or administrator.
+          Provide accurate information. We may suspend or close accounts that
+          are inaccurate, inactive, abusive, or used in breach of these Terms.
+        </li>
+        <li>
+          Invited teammates may access only what an account owner authorizes.
         </li>
       </ul>
 
@@ -64,162 +75,162 @@ export function TermsOfServicePage() {
       <ul>
         <li>Use the Site or Services for unlawful, fraudulent, or harmful purposes.</li>
         <li>
-          Attempt to gain unauthorized access to systems, accounts, or data, or
+          Attempt unauthorized access to systems, accounts, or data, or
           interfere with security or availability.
         </li>
         <li>
-          Upload malware, scrape the Site in a manner that impairs performance,
-          or reverse engineer the Services except as permitted by law.
+          Upload malware, scrape the Site in a way that harms performance, or
+          reverse engineer the Services except as allowed by law.
         </li>
         <li>
           Misrepresent your identity or affiliation, or use the Services to
-          infringe intellectual property or privacy rights of others.
+          infringe others&apos; rights.
         </li>
         <li>
-          Use inventory or related Services to sell products you cannot
-          lawfully sell or fulfil in your jurisdiction.
+          Use inventory or related tools to list or sell products you cannot
+          lawfully sell or fulfil where you operate.
         </li>
       </ul>
 
-      <h2>5. Client content and responsibilities</h2>
+      <h2>5. Your content and responsibilities</h2>
       <p>
-        You retain ownership of content, trademarks, product data, and materials
-        you provide (&ldquo;Client Content&rdquo;). You grant us a non-exclusive
-        licence to use Client Content solely to perform the Services. You
-        represent that you have all rights needed to provide Client Content and
-        that it does not violate law or third-party rights.
+        You keep ownership of content, trademarks, product data, and materials
+        you provide (&ldquo;Your Content&rdquo;). You grant us a limited licence
+        to use Your Content only to operate the Site/Services or perform agreed
+        work. You represent that you have the rights needed to provide Your
+        Content.
       </p>
       <p>
-        You are solely responsible for the accuracy of inventory, pricing,
+        You alone are responsible for the accuracy of inventory, pricing,
         product claims, and compliance of your retail or online operations with
-        applicable laws (including consumer protection, advertising, tax, and
-        product safety rules).
+        laws that apply to you (including consumer, advertising, tax, and
+        product rules in Canada, the United States, or elsewhere).
       </p>
 
-      <h2>6. Our intellectual property</h2>
+      <h2>6. Our materials</h2>
       <p>
-        The Site, our pre-existing tools, themes, software, documentation, and
-        branding are owned by Tech to Store or our licensors. Except for rights
-        expressly granted in a Project Agreement (for example, a licence or
-        assignment of custom deliverables upon full payment), no intellectual
-        property rights are transferred to you. Theme previews and demos on the
-        Site are for evaluation and remain our property.
+        The Site, demos, themes, branding, and pre-existing tools remain ours
+        or our licensors&apos;. Except for rights expressly granted in a Project
+        Note, no ownership is transferred. Theme previews are for evaluation
+        only.
       </p>
 
-      <h2>7. Fees and payment</h2>
+      <h2>7. Fees</h2>
       <p>
-        Fees for paid Services are as stated in the applicable Project
-        Agreement or checkout flow. Unless otherwise agreed in writing, invoices
-        are due upon receipt. Late amounts may accrue interest at the maximum
-        rate permitted by law. You are responsible for applicable taxes. We may
-        suspend work or access for unpaid amounts.
+        If fees apply, they will be stated in a Project Note or clearly in a
+        checkout or invoice flow. Until paid as agreed, we may pause work or
+        access. You are responsible for taxes that apply to you. Early-stage
+        pricing and packages may change.
       </p>
 
-      <h2>8. Third-party services</h2>
+      <h2>8. Third-party platforms</h2>
       <p>
-        The Services may integrate with or depend on third-party platforms
-        (including hosting, authentication, app stores, payment processors, and
-        analytics). Your use of those platforms is subject to their terms. We
-        are not responsible for third-party outages, policy changes, or fees
-        charged by app stores or other vendors.
+        The Services may rely on third-party hosting, authentication, app
+        stores, payments, or analytics. Their terms apply. We are not
+        responsible for their outages, policy changes, fees, or approval
+        decisions (including app-store review).
       </p>
 
       <h2>9. Confidentiality</h2>
       <p>
-        Each party may receive non-public information from the other. The
-        receiving party will use reasonable care to protect that information and
-        use it only to perform under these Terms or a Project Agreement, except
-        where disclosure is required by law or the information is or becomes
-        public through no fault of the receiving party.
+        If we exchange non-public information, each side should use reasonable
+        care and use it only for the discussion or project at hand, except where
+        disclosure is required by law or the information is already public
+        through no fault of the receiving party.
       </p>
 
-      <h2>10. Warranties and disclaimers</h2>
+      <h2>10. No warranties</h2>
       <p>
-        We provide the Site and, except as expressly stated in a Project
-        Agreement, the Services on an &ldquo;as is&rdquo; and &ldquo;as
-        available&rdquo; basis. To the fullest extent permitted by applicable
-        law, we disclaim all implied warranties and conditions, including
-        merchantability, fitness for a particular purpose, and
-        non-infringement. We do not warrant that the Site or Services will be
-        uninterrupted, error-free, or free of harmful components, or that
-        SEO, traffic, or inventory outcomes will meet any particular result —
-        performance metrics discussed publicly or in marketing are illustrative
-        and not guarantees.
+        To the fullest extent permitted by law, the Site and Services are
+        provided &ldquo;as is&rdquo; and &ldquo;as available,&rdquo; without
+        warranties or conditions of any kind, whether express, implied, or
+        statutory, including merchantability, fitness for a particular purpose,
+        and non-infringement. We do not promise uninterrupted or error-free
+        operation, or any particular SEO, traffic, revenue, inventory, or
+        mobile-app outcome. Marketing examples and project screenshots are
+        illustrative only.
       </p>
       <p>
-        Nothing in these Terms excludes warranties or conditions that cannot be
-        excluded under the laws of Manitoba or Canada, including consumer
-        protections that apply if you are a consumer under applicable law.
+        Some consumer protections cannot be waived. Nothing here limits rights
+        that cannot be limited under the laws that lawfully apply to you.
       </p>
 
       <h2>11. Limitation of liability</h2>
       <p>
-        To the fullest extent permitted by law, Tech to Store and its
-        directors, officers, employees, and agents will not be liable for any
-        indirect, incidental, special, consequential, punitive, or exemplary
-        damages, or any loss of profits, revenue, data, goodwill, or business
-        opportunity, arising out of or related to the Site, Services, or these
-        Terms, whether in contract, tort (including negligence), or otherwise,
-        even if advised of the possibility.
+        To the fullest extent permitted by law, Tech to Store and the
+        individuals operating it will not be liable for indirect, incidental,
+        special, consequential, punitive, or exemplary damages, or loss of
+        profits, revenue, data, goodwill, or opportunity, arising from the Site,
+        Services, or these Terms, whether in contract, tort (including
+        negligence), or otherwise, even if advised of the possibility.
       </p>
       <p>
-        Our aggregate liability for all claims arising out of or related to the
-        Site, Services, or these Terms will not exceed the greater of (a) the
-        fees you paid to us for the Services giving rise to the claim in the
-        twelve (12) months before the claim, or (b) one hundred Canadian dollars
-        (CAD $100), except where liability cannot be limited by law.
-      </p>
-
-      <h2>12. Indemnity</h2>
-      <p>
-        You will indemnify and hold harmless Tech to Store and its personnel
-        from and against claims, damages, losses, and expenses (including
-        reasonable legal fees) arising from your Client Content, your use of the
-        Services, your breach of these Terms, or your violation of law or
-        third-party rights.
+        Where liability cannot be excluded, our aggregate liability for claims
+        related to the Site, Services, or these Terms is limited to the greater
+        of (a) amounts you paid us for the specific work giving rise to the
+        claim in the prior twelve (12) months, or (b) one hundred Canadian
+        dollars (CAD $100), except where a higher minimum is required by law
+        that cannot be waived.
       </p>
 
-      <h2>13. Suspension and termination</h2>
+      <h2>12. Your responsibility for claims</h2>
       <p>
-        We may suspend or terminate access to the Site or Services if you
-        breach these Terms, create risk or legal exposure, or fail to pay
-        amounts due. You may stop using the Site at any time. Provisions that by
-        their nature should survive (including intellectual property,
-        disclaimers, limitations of liability, and indemnity) will survive
-        termination.
+        You agree to be responsible for claims, damages, and reasonable expenses
+        (including legal fees where allowed) arising from Your Content, your use
+        of the Services, your breach of these Terms, or your violation of law or
+        third-party rights, to the extent permitted by applicable law.
       </p>
 
-      <h2>14. Governing law and disputes</h2>
+      <h2>13. Suspension and ending use</h2>
       <p>
-        These Terms are governed by the laws of the Province of Manitoba and
-        the federal laws of Canada applicable therein, without regard to
-        conflict-of-law rules. The courts of Manitoba sitting in Winnipeg have
-        exclusive jurisdiction, subject to any mandatory consumer rights that
-        cannot be waived. You and we submit to that venue.
+        We may suspend or end access if you breach these Terms, create risk, or
+        fail to pay amounts due under a Project Note. You may stop using the
+        Site at any time. Sections that should survive (including ownership,
+        disclaimers, and liability limits) continue after ending use.
+      </p>
+
+      <h2>14. Governing law</h2>
+      <p>
+        These Terms are governed by the laws of Manitoba and the federal laws of
+        Canada that apply there, without regard to conflict-of-law rules, except
+        where mandatory consumer or other laws of your place of residence
+        (including in the United States) require otherwise. Courts in Winnipeg,
+        Manitoba may hear disputes, without limiting any non-waivable rights you
+        have to bring claims in another forum required by law.
       </p>
 
       <h2>15. Changes</h2>
       <p>
-        We may update these Terms by posting a revised version on the Site with
-        an updated date. Material changes will apply prospectively. Continued
-        use after the effective date constitutes acceptance, except where
-        additional consent is required by law.
+        We may update these Terms as the project evolves. The date above will
+        change when we post updates. Continued use after posting means you
+        accept the revised Terms, except where additional consent is required by
+        law.
       </p>
 
       <h2>16. General</h2>
       <ul>
-        <li>These Terms, the Privacy Policy, and any Project Agreement constitute the entire agreement regarding the Site and Services.</li>
-        <li>If any provision is unenforceable, the remainder remains in effect.</li>
-        <li>Failure to enforce a provision is not a waiver.</li>
-        <li>You may not assign these Terms without our prior written consent; we may assign to an affiliate or successor.</li>
-        <li>Notices may be sent to the email associated with your account or to contact@techtostore.com.</li>
+        <li>
+          These Terms, the Privacy Policy, and any Project Note are the full
+          agreement for the Site and related Services unless a signed contract
+          says otherwise.
+        </li>
+        <li>If one part is unenforceable, the rest remains in effect.</li>
+        <li>Failure to enforce a part is not a waiver.</li>
+        <li>
+          You may not assign these Terms without our prior written consent; we
+          may assign them if the initiative is later incorporated or transferred.
+        </li>
+        <li>
+          Notices may be sent to the email on your account or to
+          contact@techtostore.com.
+        </li>
       </ul>
 
       <h2>17. Contact</h2>
       <p>
         <a href="mailto:contact@techtostore.com">contact@techtostore.com</a>
         <br />
-        Tech to Store — Winnipeg, Manitoba, Canada
+        Tech to Store — Winnipeg, Manitoba, Canada (early-stage initiative)
       </p>
     </LegalPageLayout>
   );

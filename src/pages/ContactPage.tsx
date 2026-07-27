@@ -85,8 +85,8 @@ export function ContactPage() {
           </h1>
           <p className="mt-3 text-center text-muted text-sm sm:text-base leading-relaxed">
             {sent
-              ? 'We appreciate your message and will reach out shortly.'
-              : "Tell us about your store — we'll get back to you at the email you provide."}
+              ? 'Thank you for writing. We aim to reply at the email you provided.'
+              : 'Tell us about your store — we aim to reply at the email you provide.'}
           </p>
         </div>
 
@@ -99,7 +99,8 @@ export function ContactPage() {
                 </div>
                 <h2 className="font-display text-xl font-bold text-ink mb-2">Message received</h2>
                 <p className="text-sm text-muted leading-relaxed mb-6">
-                  A member of our team will follow up at the email you provided.
+                  If we can help, we aim to follow up at the email you provided.
+                  Timing may vary while we are in an early stage.
                 </p>
                 <Link to="/" className="btn-primary">
                   Back to home

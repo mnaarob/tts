@@ -192,8 +192,9 @@ function OnboardingPhase({
           See your store come to life
         </h1>
         <p className="mt-4 text-lg text-muted max-w-xl mx-auto leading-relaxed">
-          Tell us a few details about your business. We'll instantly drop them into every template
-          so you can preview your storefront — and switch designs without retyping a thing.
+          Tell us a few details about your store. We can place them into each
+          template so you can preview layouts — and switch designs without
+          retyping.
         </p>
       </div>
 

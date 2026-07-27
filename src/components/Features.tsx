@@ -3,14 +3,14 @@ import { ArrowUpRight } from 'lucide-react';
 
 const stats = [
   {
-    value: '+143%',
-    label: 'Organic traffic',
-    detail: 'in 6 months',
+    value: 'CA + US',
+    label: 'Markets in view',
+    detail: 'Early exploration — not a claim of national coverage',
   },
   {
-    value: '96%',
-    label: 'In-stock rate',
-    detail: 'up from 89%',
+    value: 'MVP',
+    label: 'Product stage',
+    detail: 'Learning with real storefronts; outcomes are not guaranteed',
   },
 ];
 
@@ -54,8 +54,8 @@ export function Features() {
               />
             </div>
             <p className="text-muted leading-relaxed max-w-md mb-10">
-              Live sites we shipped — storefronts and brands that sell real
-              things.
+              Example projects we have helped bring online — storefronts and
+              brands that sell real things. Past work is illustrative only.
             </p>
 
             <ul className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-5">
