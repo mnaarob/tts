@@ -85,7 +85,7 @@ export function ContactPage() {
           </h1>
           <p className="mt-3 text-center text-muted text-sm sm:text-base leading-relaxed">
             {sent
-              ? 'Thank you for writing. We aim to reply at the email you provided.'
+              ? 'We will respond to the email address you provided as soon as possible.'
               : 'Tell us about your store — we aim to reply at the email you provide.'}
           </p>
         </div>
@@ -97,11 +97,7 @@ export function ContactPage() {
                 <div className="w-14 h-14 bg-pin/15 rounded-full flex items-center justify-center mx-auto mb-4">
                   <CheckCircle2 className="w-7 h-7 text-pin" />
                 </div>
-                <h2 className="font-display text-xl font-bold text-ink mb-2">Message received</h2>
-                <p className="text-sm text-muted leading-relaxed mb-6">
-                  If we can help, we aim to follow up at the email you provided.
-                  Timing may vary as we grow this initiative.
-                </p>
+                <h2 className="font-display text-xl font-bold text-ink mb-6">Message received</h2>
                 <Link to="/" className="btn-primary">
                   Back to home
                 </Link>
